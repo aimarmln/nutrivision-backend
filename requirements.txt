@@ -1,0 +1,10 @@
+Flask==3.1.1
+flask_jwt_extended==4.7.1
+flask_sqlalchemy==3.1.1
+pandas==2.2.3
+Pillow==11.2.1
+python-dotenv==1.1.0
+SQLAlchemy==2.0.35
+tensorflow==2.18.0
+ultralytics==8.3.114
+werkzeug==3.1.3
