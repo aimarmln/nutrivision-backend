@@ -26,7 +26,7 @@ def upgrade() -> None:
     op.create_table('servings',
         sa.Column('id', sa.UUID(), nullable=False),
         sa.Column('food_id', sa.UUID(), nullable=False),
-        sa.Column('serving_unit', sa.String(length=50), nullable=False),
+        sa.Column('serving_unit', sa.String(length=100), nullable=False),
         sa.Column('number_of_units', sa.Float(), nullable=False),
         sa.Column('description', sa.String(length=255), nullable=True),
         sa.Column('calories_kcal', sa.Float(), nullable=False),
@@ -60,7 +60,13 @@ def upgrade() -> None:
                existing_type=postgresql.TIMESTAMP(),
                nullable=False,
                existing_server_default=sa.text('now()'))
-    op.create_foreign_key(None, 'food_logs', 'servings', ['serving_id'], ['id'])
+    op.create_foreign_key(
+        "food_logs_serving_id_fkey",
+        "food_logs",
+        "servings",
+        ["serving_id"],
+        ["id"],
+    )
     op.drop_column('food_logs', 'weight_grams')
     op.drop_column('food_logs', 'fats')
     op.drop_column('food_logs', 'carbohydrates')
@@ -141,7 +147,11 @@ def downgrade() -> None:
     op.add_column('food_logs', sa.Column('carbohydrates', sa.DOUBLE_PRECISION(precision=53), autoincrement=False, nullable=False))
     op.add_column('food_logs', sa.Column('fats', sa.DOUBLE_PRECISION(precision=53), autoincrement=False, nullable=False))
     op.add_column('food_logs', sa.Column('weight_grams', sa.DOUBLE_PRECISION(precision=53), autoincrement=False, nullable=False))
-    op.drop_constraint(None, 'food_logs', type_='foreignkey')
+    op.drop_constraint(
+        "food_logs_serving_id_fkey",
+        "food_logs",
+        type_="foreignkey"
+    )
     op.alter_column('food_logs', 'created_at',
                existing_type=postgresql.TIMESTAMP(),
                nullable=True,

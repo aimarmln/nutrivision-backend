@@ -15,13 +15,14 @@ class Food(Base):
         primary_key=True
     )
 
-    name: Mapped[str] = mapped_column(String(100), nullable=False)
+    name: Mapped[str] = mapped_column(String(150), nullable=False)
     yolo_label: Mapped[str | None] = mapped_column(String(50), unique=True, nullable=True)
 
     category: Mapped[str] = mapped_column(String(50), nullable=False)
     subcategory: Mapped[str] = mapped_column(String(50), nullable=True)
 
-    search_vector: Mapped[str] = mapped_column(TSVECTOR, nullable=False)
+    # Will be populated by a trigger in the database, not directly by SQLAlchemy
+    search_vector: Mapped[str] = mapped_column(TSVECTOR, nullable=True) 
 
     # Relationships
     servings: Mapped[list["Serving"]] = relationship("Serving", backref="food")

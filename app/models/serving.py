@@ -19,7 +19,7 @@ class Serving(Base):
         nullable=False
     )
 
-    serving_unit: Mapped[str] = mapped_column(String(50), nullable=False)
+    serving_unit: Mapped[str] = mapped_column(String(100), nullable=False)
     number_of_units: Mapped[float] = mapped_column(Float, nullable=False)
     description: Mapped[str | None] = mapped_column(String(255), nullable=True)
 

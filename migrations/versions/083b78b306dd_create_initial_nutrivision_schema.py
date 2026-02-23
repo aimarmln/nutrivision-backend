@@ -71,7 +71,7 @@ def upgrade() -> None:
     op.create_table(
         "foods",
         sa.Column("id", postgresql.UUID(as_uuid=True), primary_key=True, default=uuid.uuid4),
-        sa.Column("name", sa.String(100), nullable=False),
+        sa.Column("name", sa.String(150), nullable=False),
         sa.Column("yolo_label", sa.String(50), unique=True),
         sa.Column("calories_per_100g_kcal", sa.Float, nullable=False),
         sa.Column("fat_per_100g_g", sa.Float, nullable=False),
