@@ -1,21 +1,10 @@
 import uuid
 from datetime import datetime
-from sqlalchemy.orm import Mapped, mapped_column
-from sqlalchemy import (
-    String,
-    Integer,
-    Float,
-    DateTime,
-    Boolean,
-    func
-)
-from sqlalchemy import (
-    String,
-    Float,
-    Integer,
-    DateTime
-)
-from sqlalchemy.dialects.postgresql import UUID
+from sqlalchemy.orm import Mapped, mapped_column, relationship
+from sqlalchemy import String, DateTime, Boolean, func
+from sqlalchemy import String, DateTime
+from sqlalchemy.dialects.postgresql import UUID, TSVECTOR
+from app.models.serving import Serving
 from app.database import Base
 
 class Food(Base):
@@ -29,17 +18,13 @@ class Food(Base):
     name: Mapped[str] = mapped_column(String(100), nullable=False)
     yolo_label: Mapped[str | None] = mapped_column(String(50), unique=True, nullable=True)
 
-    calories_per_100g_kcal: Mapped[float] = mapped_column(Float, nullable=False)
-    fat_per_100g_g: Mapped[float] = mapped_column(Float, nullable=False)
-    cholesterol_per_100g_mg: Mapped[float] = mapped_column(Float, nullable=False)
-    protein_per_100g_g: Mapped[float] = mapped_column(Float, nullable=False)
-    carbohydrate_per_100g_g: Mapped[float] = mapped_column(Float, nullable=False)
-    fiber_per_100g_g: Mapped[float] = mapped_column(Float, nullable=False)
-    sugar_per_100g_g: Mapped[float] = mapped_column(Float, nullable=False)
-    sodium_per_100g_mg: Mapped[float] = mapped_column(Float, nullable=False)
-    kalium_per_100g_mg: Mapped[float] = mapped_column(Float, nullable=False)
+    category: Mapped[str] = mapped_column(String(50), nullable=False)
+    subcategory: Mapped[str] = mapped_column(String(50), nullable=True)
 
-    instance_weight_g: Mapped[int | None] = mapped_column(Integer, nullable=True)
+    search_vector: Mapped[str] = mapped_column(TSVECTOR, nullable=False)
+
+    # Relationships
+    servings: Mapped[list["Serving"]] = relationship("Serving", backref="food")
 
     # Audit fields
     is_deleted: Mapped[bool] = mapped_column(
