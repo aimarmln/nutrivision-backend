@@ -1,0 +1,20 @@
+FOOD_CATEGORY_ORDER = [
+    'Nasi, Mie & Pasta',
+    'Daging',
+    'Sayuran',
+    'Buah',
+    'Telur',
+    'Ikan & Seafood',
+    'Minuman',
+    'Kacang-Kacangan',
+    'Biji-Bijian',
+    'Keju & Susu',
+    'Roti & Sereal',
+    'Saus & Bumbu',
+    'Sup',
+    'Salad',
+    'Makanan Ringan',
+    'Makanan Penutup',
+    'Makanan Cepat Saji',
+    'Lainnya'
+]

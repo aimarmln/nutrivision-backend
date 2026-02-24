@@ -7,24 +7,21 @@ def handle_expired_token(jwt_header, jwt_payload):
     logger.warning("Expired token used", exc_info=True)
     return error_response(
         message="Token has expired",
-        status_code=HTTPStatus.UNAUTHORIZED,
-        data=None
+        status_code=HTTPStatus.UNAUTHORIZED
     )
 
 def handle_invalid_token(error):
     logger.warning("Invalid token", exc_info=True)
     return error_response(
         message="Invalid token",
-        status_code=HTTPStatus.UNAUTHORIZED,
-        data=None
+        status_code=HTTPStatus.UNAUTHORIZED
     )
 
 def handle_missing_token(error):
     logger.warning("Missing token", exc_info=True)
     return error_response(
         message="Authorization token is missing",
-        status_code=HTTPStatus.UNAUTHORIZED,
-        data=None
+        status_code=HTTPStatus.UNAUTHORIZED
     )
 
 # Other errors

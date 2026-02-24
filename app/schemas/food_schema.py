@@ -3,5 +3,5 @@ from typing import Optional
 
 class FoodsListQueryParams(BaseModel):
     q: Optional[str] = None
-    page: PositiveInt = 1      
-    limit: PositiveInt = 20  
+    page: Optional[PositiveInt] = 1      
+    limit: Optional[PositiveInt] = 20  
