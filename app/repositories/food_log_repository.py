@@ -2,7 +2,9 @@ import uuid
 from sqlalchemy.orm import joinedload
 from typing import List
 from datetime import date, datetime, time, timezone
+from zoneinfo import ZoneInfo
 from app.database import SessionLocal
+from app.models.food import Food
 from app.models.food_log import FoodLog
 
 class FoodLogRepository:
@@ -20,7 +22,9 @@ class FoodLogRepository:
         food_log_id: uuid.UUID,
         user_id: uuid.UUID,
         preload_user: bool = False,
-        preload_food: bool = False
+        preload_food: bool = False,
+        preload_serving: bool = False,
+        preload_food_servings: bool = False
     ) -> FoodLog | None:
         with SessionLocal() as session:
             query = session.query(FoodLog).filter(
@@ -33,27 +37,44 @@ class FoodLogRepository:
             if preload_user:
                 query = query.options(joinedload(FoodLog.user))
             if preload_food:
-                query = query.options(joinedload(FoodLog.food))
+                if preload_food_servings:
+                    # preload food + all its servings
+                    query = query.options(joinedload(FoodLog.food).joinedload(Food.servings))
+                else:
+                    query = query.options(joinedload(FoodLog.food))
+            if preload_serving:
+                query = query.options(joinedload(FoodLog.serving))
 
             return query.first()
 
     @staticmethod
-    def find_by_user_id_and_date(user_id: uuid.UUID, log_date: date) -> List[FoodLog]:
-        start_datetime = datetime.combine(log_date, time.min, tzinfo=timezone.utc)
-        end_datetime = datetime.combine(log_date, time.max, tzinfo=timezone.utc)    
+    def find_by_user_id_and_date(
+        user_id: uuid.UUID,
+        log_date: date,
+        preload_food: bool = False,
+        preload_serving: bool = False,
+        preload_food_servings: bool = False
+    ) -> List[FoodLog]:
+        tz = ZoneInfo("Asia/Jakarta")  # UTC+7
+        start_datetime = datetime.combine(log_date, time.min, tzinfo=tz)
+        end_datetime = datetime.combine(log_date, time.max, tzinfo=tz)
 
         with SessionLocal() as session:
-            result = (
-                session.query(FoodLog)
-                .options(joinedload(FoodLog.food))
-                .filter(
-                    FoodLog.user_id == user_id,
-                    FoodLog.created_at >= start_datetime,
-                    FoodLog.created_at <= end_datetime,
-                    FoodLog.is_deleted == False
-                )
-                .all()
+            query = session.query(FoodLog).filter(
+                FoodLog.user_id == user_id,
+                FoodLog.created_at >= start_datetime,
+                FoodLog.created_at <= end_datetime,
+                FoodLog.is_deleted == False
             )
-            
-        return result
+
+            # Conditional eager load
+            if preload_food:
+                if preload_food_servings:
+                    query = query.options(joinedload(FoodLog.food).joinedload(Food.servings))
+                else:
+                    query = query.options(joinedload(FoodLog.food))
+            if preload_serving:
+                query = query.options(joinedload(FoodLog.serving))
+
+            return query.all()
         

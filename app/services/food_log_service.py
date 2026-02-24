@@ -1,7 +1,8 @@
 import uuid
 from datetime import datetime, timezone
-from werkzeug.exceptions import NotFound
+from werkzeug.exceptions import NotFound, BadRequest
 from app.repositories.food_repository import FoodRepository
+from app.repositories.serving_repository import ServingRepository
 from app.repositories.food_log_repository import FoodLogRepository
 from app.models.food_log import FoodLog
 from app.schemas.food_log_schema import CreateFoodLogSchema, UpdateFoodLogSchema
@@ -15,75 +16,99 @@ class FoodLogService:
         if not food:
             raise NotFound('Food not found')
         
-        # Get factor for nutritional calculation
-        factor = data.weight_grams / 100
-
-        # Calculate nutritional values
-        calories = food.calories_per_100g_kcal * factor
-        carbs = food.carbohydrate_per_100g_g * factor
-        proteins = food.protein_per_100g_g * factor
-        fats = food.fat_per_100g_g * factor
-
+        # Validate serving exists
+        serving = ServingRepository.find_by_id(data.serving_id)
+        if not serving:
+            raise NotFound('Serving not found')
+        
+        # Validate serving belongs to the specified food
+        if serving.food_id != data.food_id:
+            raise BadRequest('Serving does not belong to the specified food')
+        
         # Create food log entry
         food_log = FoodLog(
             id=uuid.uuid4(),
             user_id=user_id,
             food_id=data.food_id,
+            serving_id=data.serving_id,
+            number_of_units=data.number_of_units,
             meal_type=data.meal_type,
-            weight_grams=data.weight_grams,
-            calories=calories,
-            carbohydrates=carbs,
-            proteins=proteins,
-            fats=fats
         )
 
         # Save food log to database     
-        saved_log = FoodLogRepository.save(food_log)
+        FoodLogRepository.save(food_log)
 
-        return {
-            'id': saved_log.id,
-            'food_name': food.name,
-            'weight_grams': round(saved_log.weight_grams),
-            'calories': round(saved_log.calories),
-            'carbohydrates': saved_log.carbohydrates,
-            'proteins': saved_log.proteins,
-            'fats': saved_log.fats,
-        }
+        return
     
     @staticmethod
     def get_food_log_detail(user_id: uuid.UUID, food_log_id: uuid.UUID):
         # Retrieve food log entry
-        food_log = FoodLogRepository.find_by_id_and_user(food_log_id, user_id, preload_food=True)
+        food_log = FoodLogRepository.find_by_id_and_user(
+            food_log_id, 
+            user_id, 
+            preload_food=True, 
+            preload_serving=True,
+            preload_food_servings=True
+        )
         if not food_log:
             raise NotFound('Food log not found')
+        
+        # Calculate nutritional values based on serving and number of units
+        serving = food_log.serving
+        factor = food_log.number_of_units / food_log.serving.number_of_units
+
+        total_calories = serving.calories_kcal * factor
+        total_protein = serving.protein_g * factor
+        total_fat = serving.fat_g * factor
+        total_carbs = serving.carbohydrate_g * factor
+
+        # Get all servings for this food
+        servings_list = [
+            {
+                'id': serving.id,
+                'number_of_units': serving.number_of_units,
+                'serving_unit': serving.serving_unit,
+                'description': serving.description,
+                'calories_kcal': round(serving.calories_kcal),
+                'carbohydrates_g': round(serving.carbohydrate_g, 1),
+                'proteins_g': round(serving.protein_g, 1),
+                'fats_g': round(serving.fat_g, 1)
+            }
+            for serving in food_log.food.servings
+        ]
         
         return {
             'id': food_log.id,
             'food_name': food_log.food.name,
-            'weight_grams': round(food_log.weight_grams),
-            'calories': round(food_log.calories),
-            'carbohydrates': food_log.carbohydrates,
-            'proteins': food_log.proteins,
-            'fats': food_log.fats,
+            'calories': round(total_calories),
+            'carbohydrates': round(total_carbs, 2),
+            'proteins': round(total_protein, 2),
+            'fats': round(total_fat, 2),
+            'meal_type': food_log.meal_type,
+            'serving_id': food_log.serving_id,
+            'number_of_units': factor,
+            'servings': servings_list,
         }
     
     @staticmethod
     def update_food_log(user_id: uuid.UUID, food_log_id: uuid.UUID, data: UpdateFoodLogSchema):
         # Retrieve food log entry
-        food_log = FoodLogRepository.find_by_id_and_user(food_log_id, user_id, preload_food=True)
+        food_log = FoodLogRepository.find_by_id_and_user(food_log_id, user_id)
         if not food_log:
             raise NotFound('Food log not found')
         
-        # Calculate factor for nutritional values
-        factor = data.weight_grams / 100
-        food = food_log.food
+        # Validate serving exists
+        serving = ServingRepository.find_by_id(data.serving_id)
+        if not serving:
+            raise NotFound('Serving not found')
+        
+        # Validate serving belongs to the specified food
+        if serving.food_id != food_log.food_id:
+            raise BadRequest('Serving does not belong to the specified food')
 
-        # Recalculate nutritional values
-        food_log.weight_grams = data.weight_grams
-        food_log.calories = food.calories_per_100g_kcal * factor
-        food_log.carbohydrates = food.carbohydrate_per_100g_g * factor
-        food_log.proteins = food.protein_per_100g_g * factor
-        food_log.fats = food.fat_per_100g_g * factor
+        # Update food log entry
+        food_log.serving_id = data.serving_id
+        food_log.number_of_units = data.number_of_units
         food_log.updated_at = datetime.now(timezone.utc)    
 
         # Save updated food log

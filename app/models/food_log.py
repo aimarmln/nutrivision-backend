@@ -52,9 +52,9 @@ class FoodLog(Base):
     )
 
     # Relationships
-    user: Mapped["User"] = relationship("User", backref="food_logs")
-    food: Mapped["Food"] = relationship("Food", backref="food_logs")
-    serving: Mapped["Serving"] = relationship("Serving", backref="food_logs")
+    user: Mapped["User"] = relationship("User", backref="food_logs", init=False)
+    food: Mapped["Food"] = relationship("Food", backref="food_logs", init=False)
+    serving: Mapped["Serving"] = relationship("Serving", backref="food_logs", init=False)
 
     # Audit fields
     is_deleted: Mapped[bool] = mapped_column(

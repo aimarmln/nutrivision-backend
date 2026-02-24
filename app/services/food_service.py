@@ -1,45 +1,87 @@
 import uuid
 from werkzeug.exceptions import NotFound, InternalServerError
 from werkzeug.datastructures import FileStorage
+from app.schemas.food_schema import FoodsListQueryParams
 from app.extensions import yolo_detector
 from app.repositories.food_repository import FoodRepository
 
 class FoodService:
 
     @staticmethod
-    def get_all_foods(search_query: str | None = None):
-        # Call repository to get all foods
-        foods =  FoodRepository.find_all(search_query)
+    def get_all_foods(params: FoodsListQueryParams) -> tuple[list[dict], dict]:
+        # Count total items for pagination
+        total_items = FoodRepository.count_all(search_query=params.q)
 
-        results = [
-            {
+        # Call repository to get all foods
+        foods = FoodRepository.find_all_paginated(
+            page=params.page, 
+            limit=params.limit, 
+            search_query=params.q, 
+            preload_servings=True
+        )
+
+        # Build results with default serving information
+        results = []
+        for food in foods:
+            # Find the default serving for the food
+            default_serving = next((s for s in food.servings if s.is_default), None)
+            if not default_serving:
+                raise InternalServerError(f'Default serving not found for food: {food.name}')
+
+            results.append({
                 'id': food.id,
                 'food_name': food.name,
-                'weight': 100,
-                'calories_kcal': round(food.calories_per_100g_kcal),
-                'carbohydrates_g': round(food.carbohydrate_per_100g_g, 1),
-                'proteins_g': round(food.protein_per_100g_g, 1),
-                'fats_g': round(food.fat_per_100g_g, 1)
-            } 
-            for food in foods
-        ]
+                'default_serving': {
+                    'id': default_serving.id,
+                    'number_of_units': default_serving.number_of_units,
+                    'serving_unit': default_serving.serving_unit,
+                    'serving_description': default_serving.description,
+                    'calories_kcal': round(default_serving.calories_kcal),
+                    'carbohydrates_g': round(default_serving.carbohydrate_g, 1),
+                    'proteins_g': round(default_serving.protein_g, 1),
+                    'fats_g': round(default_serving.fat_g, 1)
+                }
+                
+            })
 
-        return results
+        # Build pagination info
+        total_pages = (total_items + params.limit - 1) // params.limit
+        pagination = {
+            'current_page': params.page,
+            'limit': params.limit,
+            'total_items': total_items,
+            'total_pages': total_pages, 
+        }
+
+        return results, pagination
 
     @staticmethod
     def get_food_detail(food_id: uuid.UUID):
         # Retrieve food detail by ID
-        food = FoodRepository.find_by_id(food_id)
+        food = FoodRepository.find_by_id(id=food_id, preload_servings=True)
         if not food:
             raise NotFound('Food not found')
+        
+        servings_list = [
+            {
+                'id': serving.id,
+                'number_of_units': serving.number_of_units,
+                'serving_unit': serving.serving_unit,
+                'description': serving.description,
+                'calories_kcal': round(serving.calories_kcal),
+                'carbohydrates_g': round(serving.carbohydrate_g, 1),
+                'proteins_g': round(serving.protein_g, 1),
+                'fats_g': round(serving.fat_g, 1)
+            }
+            for serving in food.servings
+        ]
         
         result = {
             'id': food.id,
             'food_name': food.name,
-            'calories_per_100g_kcal': round(food.calories_per_100g_kcal),
-            'carbohydrate_per_100g_g': round(food.carbohydrate_per_100g_g, 1),
-            'protein_per_100g_g': round(food.protein_per_100g_g, 1),
-            'fat_per_100g_g': round(food.fat_per_100g_g, 1),
+            'food_category': food.category,
+            'food_subcategory': food.subcategory,
+            'servings': servings_list,  
         }
 
         return result
@@ -54,10 +96,10 @@ class FoodService:
             return []
 
         # Get unique labels from detection results
-        labels = list({item.get("label") for item in detection_results})
+        labels = list({item.get('label') for item in detection_results})
 
         # Query foods by YOLO labels
-        foods = FoodRepository.find_by_yolo_labels(labels)
+        foods = FoodRepository.find_by_yolo_labels(labels, preload_servings=True)
 
         # Create a mapping of YOLO label to food item for easy lookup
         food_map = {food.yolo_label: food for food in foods}
@@ -65,25 +107,37 @@ class FoodService:
         # Build results
         results = []
         for item in detection_results:
-            label = item.get("label")
-            count = item.get("count", 1)
+            label = item.get('label')
+            count = item.get('count', 1)
 
             food_item = food_map.get(label) # Find the food item based on YOLO label
-
             if not food_item:
-                raise InternalServerError(f"Food item not found for YOLO label: {label}")
+                raise InternalServerError(f'Food item not found for YOLO label: {label}')
+
+            # Find the default serving for the food
+            default_serving = next((s for s in food_item.servings if s.is_default), None)
+            if not default_serving:
+                raise InternalServerError(f'Default serving not found for food: {food_item.name}')
 
             # Calculate weight based on instance weight and detection count
-            weight = food_item.instance_weight_g * count
+            number_of_units = default_serving.number_of_units * count
+            factor = number_of_units / default_serving.number_of_units
+
+            calories_kcal = default_serving.calories_kcal * factor
+            carbohydrates_g = default_serving.carbohydrate_g * factor
+            proteins_g = default_serving.protein_g * factor
+            fats_g = default_serving.fat_g * factor
 
             results.append({
-                "id": str(food_item.id),
-                "food_name": food_item.name,
-                "weight": weight,
-                "calories_kcal": round((food_item.calories_per_100g_kcal / 100) * weight),
-                "carbohydrates_g": round((food_item.carbohydrate_per_100g_g / 100) * weight, 1),
-                "proteins_g": round((food_item.protein_per_100g_g / 100) * weight, 1),
-                "fats_g": round((food_item.fat_per_100g_g / 100) * weight, 1),
+                'id': str(food_item.id),
+                'food_name': food_item.name,
+                'number_of_units': number_of_units,
+                'serving_unit': default_serving.serving_unit,
+                'serving_description': default_serving.description,
+                'calories_kcal': round(calories_kcal),
+                'carbohydrates_g': round(carbohydrates_g, 1),
+                'proteins_g': round(proteins_g, 1),
+                'fats_g': round(fats_g, 1),
             })
 
         return results

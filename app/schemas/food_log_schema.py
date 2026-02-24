@@ -4,8 +4,10 @@ from app.constants.food_log import MealType
 
 class CreateFoodLogSchema(BaseModel):
     food_id: UUID
+    serving_id: UUID
+    number_of_units: float
     meal_type: MealType
-    weight_grams: float
 
 class UpdateFoodLogSchema(BaseModel):
-    weight_grams: float
+    serving_id: UUID
+    number_of_units: float

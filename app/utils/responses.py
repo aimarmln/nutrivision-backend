@@ -1,6 +1,7 @@
 from flask import jsonify
+from http import HTTPStatus
 
-def success_response(data=None, message="Success", pagination=None, status_code=200):
+def success_response(data=None, message="Success", pagination=None, status_code=HTTPStatus.OK):
     """ Generate a standardized success response."""
     response = {
         "status": "success",
@@ -15,7 +16,7 @@ def success_response(data=None, message="Success", pagination=None, status_code=
     return jsonify(response), status_code
 
 
-def error_response(message="Error", status_code=400):
+def error_response(message="Error", status_code=HTTPStatus.BAD_REQUEST):
     """ Generate a standardized error response."""
     return jsonify({
         "status": "error",

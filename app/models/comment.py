@@ -37,8 +37,8 @@ class Comment(Base):
     )
 
      # Relationships
-    user: Mapped["User"] = relationship("User", backref="comments")
-    recipe: Mapped["Recipe"] = relationship("Recipe", backref="comments")
+    user: Mapped["User"] = relationship("User", backref="comments", init=False)
+    recipe: Mapped["Recipe"] = relationship("Recipe", backref="comments", init=False)
 
     # Audit fields
     is_deleted: Mapped[bool] = mapped_column(

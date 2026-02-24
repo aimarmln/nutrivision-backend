@@ -19,13 +19,16 @@ from app.config import Config
 from app.extensions import jwt
 
 from app.utils.errors import (
+    handle_expired_token,
+    handle_invalid_token,
+    handle_missing_token,
     handle_bad_request,
     handle_validation_error,
     handle_not_found,
     handle_forbidden,
     handle_internal_error,
     handle_conflict,
-    handle_unauthorized,
+    handle_unauthorized
 )
 
 def create_app():
@@ -37,6 +40,10 @@ def create_app():
 
     # Initialize extensions
     jwt.init_app(app)
+
+    jwt.expired_token_loader(handle_expired_token)
+    jwt.invalid_token_loader(handle_invalid_token)
+    jwt.unauthorized_loader(handle_missing_token)
 
     # Register blueprints
     app.register_blueprint(auth_bp)

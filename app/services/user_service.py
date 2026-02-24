@@ -27,7 +27,9 @@ class UserService:
             raise NotFound('User not found')
         
         # Retrieve today's food logs
-        food_logs = FoodLogRepository.find_by_user_id_and_date(user_id, date.today())
+        food_logs = FoodLogRepository.find_by_user_id_and_date(
+            user_id=user_id, log_date=date.today(), preload_food=True, preload_serving=True
+        )
 
         # Process and aggregate data
         grouped_logs = defaultdict(list)
@@ -40,19 +42,27 @@ class UserService:
 
         # Group food logs by meal type and calculate totals
         for log in food_logs:
+            serving = log.serving
+            factor = log.number_of_units / serving.number_of_units
+
+            calories = serving.calories_kcal * factor
+            proteins = serving.protein_g * factor
+            fats = serving.fat_g * factor
+            carbs = serving.carbohydrate_g * factor
+
             grouped_logs[log.meal_type].append({
-                'meal_id': log.id,
+                'food_log_id': log.id,
                 'food_id': log.food_id,
                 'food_name': log.food.name,
-                'calories': round(log.calories),
+                'calories': round(calories),
             })
 
-            total_calories += log.calories
-            total_carbs += log.carbohydrates
-            total_proteins += log.proteins
-            total_fats += log.fats
+            total_calories += calories
+            total_carbs += carbs
+            total_proteins += proteins
+            total_fats += fats
 
-            calories_per_meal[log.meal_type] += log.calories
+            calories_per_meal[log.meal_type] += calories
 
         return {
             'user': {
@@ -67,21 +77,21 @@ class UserService:
                 'proteins_eaten': round(total_proteins, 1),
                 'fats_eaten': round(total_fats, 1),
             },
-            'meal_logs': {
+            'food_logs': {
                 MealType.BREAKFAST: {
-                    'meals': grouped_logs.get(MealType.BREAKFAST, []),
+                    'foods': grouped_logs.get(MealType.BREAKFAST, []),
                     'total_calories': round(calories_per_meal.get(MealType.BREAKFAST, 0))
                 },
                 MealType.LUNCH: {
-                    'meals': grouped_logs.get(MealType.LUNCH, []),
+                    'foods': grouped_logs.get(MealType.LUNCH, []),
                     'total_calories': round(calories_per_meal.get(MealType.LUNCH, 0))
                 },
                 MealType.DINNER: {
-                    'meals': grouped_logs.get(MealType.DINNER, []),
+                    'foods': grouped_logs.get(MealType.DINNER, []),
                     'total_calories': round(calories_per_meal.get(MealType.DINNER, 0))
                 },
                 MealType.SNACK: {
-                    'meals': grouped_logs.get(MealType.SNACK, []),
+                    'foods': grouped_logs.get(MealType.SNACK, []),
                     'total_calories': round(calories_per_meal.get(MealType.SNACK, 0))
                 }
             }
