@@ -1,11 +1,10 @@
 import uuid
-from werkzeug.exceptions import NotFound, Forbidden, InternalServerError
+from werkzeug.exceptions import NotFound, InternalServerError
 from collections import defaultdict
 from datetime import date, datetime, timezone
 from app.repositories.user_repository import UserRepository
 from app.repositories.food_log_repository import FoodLogRepository
 from app.models.user import User
-from app.constants.user import UserStatus
 from app.constants.food_log import MealType
 from app.schemas.user_schema import CompleteUserProfileSchema, UpdateUserProfileSchema
 from app.utils.user import (
@@ -65,7 +64,7 @@ class UserService:
             calories_per_meal[log.meal_type] += calories
 
         return {
-            'user': {
+            'user_summary': {
                 'name': user.name,
                 'calories_per_day': user.calories_per_day_kcal,
                 'carbohydrates_per_day': user.carbohydrates_per_day_g,
@@ -122,12 +121,6 @@ class UserService:
         user = UserRepository.find_by_id(user_id)
         if not user:
             raise NotFound('User not found')
-        
-        # Check if profile is already completed
-        if user.status == UserStatus.ACTIVE:
-            raise Forbidden('User profile is already completed, update it instead')
-        
-        user.status = UserStatus.ACTIVE
 
         # Update user with provided data
         user.name = data.name
@@ -142,7 +135,7 @@ class UserService:
         user.updated_at = datetime.now(timezone.utc)
 
         # Recalculate metrics
-        UserService._recalculate_user_metrics(user)
+        UserService.calculate_user_metrics(user)
 
         # Save updated user to database
         user = UserRepository.save(user)
@@ -156,9 +149,6 @@ class UserService:
         if not user:
             raise NotFound('User not found')
         
-        if user.status == UserStatus.DRAFT:
-            raise Forbidden('Cannot update user profile, please complete your profile first')
-
         # recalc flag
         recalc_required = False
 
@@ -198,7 +188,7 @@ class UserService:
 
         # Recalculate metrics if needed
         if recalc_required:
-            UserService._recalculate_user_metrics(user)
+            UserService.calculate_user_metrics(user)
 
         user.updated_at = datetime.now(timezone.utc)
 
@@ -207,7 +197,7 @@ class UserService:
         return user
     
     @staticmethod
-    def _recalculate_user_metrics(user: User):
+    def calculate_user_metrics(user: User):
         # Make sure all required fields for calculations are present
         if not all([user.gender, user.height_cm, user.weight_kg, user.age]):
             raise InternalServerError('Missing required fields for calculations')

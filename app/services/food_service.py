@@ -35,7 +35,7 @@ class FoodService:
                     'id': default_serving.id,
                     'number_of_units': default_serving.number_of_units,
                     'serving_unit': default_serving.serving_unit,
-                    'serving_description': default_serving.description,
+                    'description': default_serving.description,
                     'calories_kcal': round(default_serving.calories_kcal),
                     'carbohydrates_g': round(default_serving.carbohydrate_g, 1),
                     'proteins_g': round(default_serving.protein_g, 1),
@@ -71,7 +71,8 @@ class FoodService:
                 'calories_kcal': round(serving.calories_kcal),
                 'carbohydrates_g': round(serving.carbohydrate_g, 1),
                 'proteins_g': round(serving.protein_g, 1),
-                'fats_g': round(serving.fat_g, 1)
+                'fats_g': round(serving.fat_g, 1),
+                'is_default': serving.is_default,
             }
             for serving in food.servings
         ]

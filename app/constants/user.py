@@ -1,12 +1,5 @@
 from enum import Enum
 
-class UserStatus(str, Enum):
-    ACTIVE = 'Active'
-    DRAFT = 'Draft'
-
-    def __str__(self) -> str:
-        return str(self.value)
-
 class Gender(str, Enum):
     MALE = 'Male'
     FEMALE = 'Female'

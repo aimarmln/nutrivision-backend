@@ -2,18 +2,26 @@ import uuid
 from werkzeug.exceptions import NotFound
 from app.repositories.recipe_repository import RecipeRepository
 from app.repositories.comment_repository import CommentRepository
+from app.schemas.recipe_schema import RecipesListQueryParams
 from app.utils.recipe import get_ingredients_list, get_instructions_list
-from app.models.recipe import Recipe
-from app.models.user import User
+
 
 class RecipeService:
     
     @staticmethod
-    def get_all_recipes(search_query: str = None):
-        # Retrieve all recipes with their positive comment counts
-        recipes = RecipeRepository.find_all_with_positive_comment_count(search_query)
+    def get_all_recipes(params: RecipesListQueryParams) -> tuple[list[dict], dict]:
+        # Count total items for pagination
+        total_items = RecipeRepository.count_all(search_query=params.q)
 
-        return [
+        # Retrieve all recipes with their positive comment counts
+        recipes = RecipeRepository.find_all_paginated(
+            search_query=params.q, 
+            page=params.page, 
+            limit=params.limit, 
+            include_positive_comment_count=True
+        )
+
+        results = [
             {
                 'id': recipe.id,
                 'recipe_name': recipe.name,
@@ -26,7 +34,18 @@ class RecipeService:
             }
             for recipe, positive_comment_count in recipes
         ]
-    
+
+        # Build pagination info
+        total_pages = (total_items + params.limit - 1) // params.limit
+        pagination = {
+            'current_page': params.page,
+            'limit': params.limit,
+            'total_items': total_items,
+            'total_pages': total_pages, 
+        }
+        
+        return results, pagination
+
     @staticmethod
     def get_recipe_detail(recipe_id: uuid.UUID):
         # Retrieve recipe detail by ID

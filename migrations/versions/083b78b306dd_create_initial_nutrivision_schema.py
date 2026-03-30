@@ -25,7 +25,6 @@ def upgrade() -> None:
     # # =========================
     # # ENUM TYPES
     # # =========================
-    op.execute("CREATE TYPE user_status_enum AS ENUM ('Active', 'Draft')")
     op.execute("CREATE TYPE gender_enum AS ENUM ('Male', 'Female')")
     op.execute("CREATE TYPE activity_level_enum AS ENUM ('Sedentary', 'Lightly Active', 'Moderately Active', 'Active', 'Very Active')")
     op.execute("CREATE TYPE main_goal_enum AS ENUM ('Lose Weight', 'Maintain Weight', 'Gain Weight')")
@@ -42,22 +41,21 @@ def upgrade() -> None:
         sa.Column("id", postgresql.UUID(as_uuid=True), primary_key=True, default=uuid.uuid4),
         sa.Column("email", sa.String(100), nullable=False, unique=True),
         sa.Column("password", sa.String(255), nullable=False),
-        sa.Column("status", postgresql.ENUM("Active", "Draft", name="user_status_enum", create_type=False), nullable=False, server_default="Draft"),
-        sa.Column("name", sa.String(100)),
-        sa.Column("gender", postgresql.ENUM("Male", "Female", name="gender_enum", create_type=False)),
-        sa.Column("birthday", sa.Date),
-        sa.Column("age", sa.Integer),
-        sa.Column("height_cm", sa.Integer),
-        sa.Column("weight_kg", sa.Integer),
-        sa.Column("activity_level", postgresql.ENUM("Sedentary", "Lightly Active", "Moderately Active", "Active", "Very Active", name="activity_level_enum", create_type=False)),
-        sa.Column("main_goal", postgresql.ENUM("Lose Weight", "Maintain Weight", "Gain Weight", name="main_goal_enum", create_type=False)),
-        sa.Column("bmr", sa.Float),
-        sa.Column("bmi", sa.Float),
-        sa.Column("bmi_status", postgresql.ENUM("Underweight", "Healthy", "Overweight", "Obesity Class I", "Obesity Class II", name="bmi_status_enum", create_type=False)),
-        sa.Column("calories_per_day_kcal", sa.Integer),
-        sa.Column("carbohydrates_per_day_g", sa.Float),
-        sa.Column("proteins_per_day_g", sa.Float),
-        sa.Column("fats_per_day_g", sa.Float),
+        sa.Column("name", sa.String(100), nullable=False),
+        sa.Column("gender", postgresql.ENUM("Male", "Female", name="gender_enum", create_type=False), nullable=False),
+        sa.Column("birthday", sa.Date, nullable=False),
+        sa.Column("age", sa.Integer, nullable=False),
+        sa.Column("height_cm", sa.Integer, nullable=False),
+        sa.Column("weight_kg", sa.Integer, nullable=False),
+        sa.Column("activity_level", postgresql.ENUM("Sedentary", "Lightly Active", "Moderately Active", "Active", "Very Active", name="activity_level_enum", create_type=False), nullable=False),
+        sa.Column("main_goal", postgresql.ENUM("Lose Weight", "Maintain Weight", "Gain Weight", name="main_goal_enum", create_type=False), nullable=False),
+        sa.Column("bmr", sa.Float, nullable=False),
+        sa.Column("bmi", sa.Float, nullable=False),
+        sa.Column("bmi_status", postgresql.ENUM("Underweight", "Healthy", "Overweight", "Obesity Class I", "Obesity Class II", name="bmi_status_enum", create_type=False), nullable=False),
+        sa.Column("calories_per_day_kcal", sa.Integer, nullable=False),
+        sa.Column("carbohydrates_per_day_g", sa.Float, nullable=False),
+        sa.Column("proteins_per_day_g", sa.Float, nullable=False),
+        sa.Column("fats_per_day_g", sa.Float, nullable=False),
         sa.Column("is_deleted", sa.Boolean, nullable=False, server_default=sa.text("false")),
         sa.Column("created_at", sa.DateTime, server_default=sa.func.now()),
         sa.Column("updated_at", sa.DateTime),
@@ -173,4 +171,3 @@ def downgrade() -> None:
     op.execute("DROP TYPE main_goal_enum")
     op.execute("DROP TYPE activity_level_enum")
     op.execute("DROP TYPE gender_enum")
-    op.execute("DROP TYPE user_status_enum")

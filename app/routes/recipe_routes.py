@@ -5,6 +5,7 @@ from flask_jwt_extended import get_jwt_identity, jwt_required
 from app.services.recipe_service import RecipeService
 from app.services.comment_service import CommentService
 from app.schemas.recipe_comment_schema import CreateRecipeCommentSchema
+from app.schemas.recipe_schema import RecipesListQueryParams
 from app.middlewares.uuid_middleware import validate_uuid_params
 from app.utils.responses import success_response
 
@@ -13,11 +14,11 @@ recipe_bp = Blueprint('recipes', __name__, url_prefix='/api/recipes')
 @recipe_bp.route('', methods=[HTTPMethod.GET])
 @jwt_required()
 def get_recipes_list():
-    # Get search query parameter
-    search_query = request.args.get('q', None)
+    # Validate query parameters
+    params = RecipesListQueryParams(**request.args)
 
     # Call service to get all recipes
-    result = RecipeService.get_all_recipes(search_query)
+    result = RecipeService.get_all_recipes(params)
 
     return success_response(
         data=result,
