@@ -31,7 +31,7 @@ class FoodService:
             results.append({
                 'id': food.id,
                 'food_name': food.name,
-                'default_serving': {
+                'serving': {
                     'id': default_serving.id,
                     'number_of_units': default_serving.number_of_units,
                     'serving_unit': default_serving.serving_unit,
@@ -39,9 +39,9 @@ class FoodService:
                     'calories_kcal': round(default_serving.calories_kcal),
                     'carbohydrates_g': round(default_serving.carbohydrate_g, 1),
                     'proteins_g': round(default_serving.protein_g, 1),
-                    'fats_g': round(default_serving.fat_g, 1)
+                    'fats_g': round(default_serving.fat_g, 1),
+                    'is_default': default_serving.is_default,
                 }
-                
             })
 
         # Build pagination info
@@ -62,6 +62,11 @@ class FoodService:
         if not food:
             raise NotFound('Food not found')
         
+        servings_sorted = sorted(
+            food.servings,
+            key=lambda s: not s.is_default
+        )
+        
         servings_list = [
             {
                 'id': serving.id,
@@ -74,7 +79,7 @@ class FoodService:
                 'fats_g': round(serving.fat_g, 1),
                 'is_default': serving.is_default,
             }
-            for serving in food.servings
+            for serving in servings_sorted
         ]
         
         result = {
@@ -132,13 +137,17 @@ class FoodService:
             results.append({
                 'id': str(food_item.id),
                 'food_name': food_item.name,
-                'number_of_units': number_of_units,
-                'serving_unit': default_serving.serving_unit,
-                'serving_description': default_serving.description,
-                'calories_kcal': round(calories_kcal),
-                'carbohydrates_g': round(carbohydrates_g, 1),
-                'proteins_g': round(proteins_g, 1),
-                'fats_g': round(fats_g, 1),
+                'serving': {
+                    'id': default_serving.id,
+                    'number_of_units': number_of_units,
+                    'serving_unit': default_serving.serving_unit,
+                    'description': default_serving.description,
+                    'calories_kcal': round(calories_kcal),
+                    'carbohydrates_g': round(carbohydrates_g, 1),
+                    'proteins_g': round(proteins_g, 1),
+                    'fats_g': round(fats_g, 1),
+                    'is_default': default_serving.is_default,
+                }
             })
 
         return results

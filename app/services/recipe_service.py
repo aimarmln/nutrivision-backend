@@ -24,6 +24,7 @@ class RecipeService:
         results = [
             {
                 'id': recipe.id,
+                'image_path': recipe.image_path,
                 'recipe_name': recipe.name,
                 'calories_per_serving_kcal': round(recipe.calories_per_serving_kcal),
                 'carbohydrate_per_serving_g': round(recipe.carbohydrate_per_serving_g, 1),
@@ -54,11 +55,11 @@ class RecipeService:
             raise NotFound('Recipe not found')
         
         # Retrieve comments
-        comments = CommentRepository.find_by_recipe_id(recipe_id)
-        positive_comment_count = sum(1 for comment in comments if comment.sentiment == 'Positive')
+        positive_comment_count = CommentRepository.count_positive_comments_by_recipe_id(recipe_id)
 
         return {
             'id': recipe.id,
+            'image_path': recipe.image_path,
             'recipe_name': recipe.name,
             'description': recipe.description,
             'ingredients': get_ingredients_list(recipe.ingredients),
@@ -70,15 +71,5 @@ class RecipeService:
             'carbohydrate_per_serving_g': round(recipe.carbohydrate_per_serving_g, 1),
             'health_category': recipe.health_category,
             'positive_comment_count': positive_comment_count,
-            'comments': [
-                {
-                    'id': comment.id,
-                    'name': comment.user.name,
-                    'text': comment.text,
-                    'sentiment': comment.sentiment,
-                }
-                for comment in comments
-            ],
         }
-    
         

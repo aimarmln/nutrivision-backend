@@ -3,7 +3,7 @@ from werkzeug.exceptions import Conflict, Unauthorized, NotFound
 from werkzeug.security import generate_password_hash, check_password_hash
 from flask_jwt_extended import create_access_token, create_refresh_token
 from app.models.user import User
-from app.services.user_service import UserService
+import time
 from app.repositories.user_repository import UserRepository
 from app.schemas.auth_schema import CheckEmailSchema, RegisterSchema, LoginSchema
 from app.utils.user import (

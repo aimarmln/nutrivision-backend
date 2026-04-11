@@ -54,6 +54,7 @@ class UserService:
                 'food_id': log.food_id,
                 'food_name': log.food.name,
                 'calories': round(calories),
+                'created_at': log.created_at,
             })
 
             total_calories += calories
@@ -78,19 +79,31 @@ class UserService:
             },
             'food_logs': {
                 MealType.BREAKFAST: {
-                    'foods': grouped_logs.get(MealType.BREAKFAST, []),
+                    'foods': sorted(
+                        grouped_logs.get(MealType.BREAKFAST, []),
+                        key=lambda x: x['created_at']
+                    ),
                     'total_calories': round(calories_per_meal.get(MealType.BREAKFAST, 0))
                 },
                 MealType.LUNCH: {
-                    'foods': grouped_logs.get(MealType.LUNCH, []),
+                    'foods': sorted(
+                        grouped_logs.get(MealType.LUNCH, []),
+                        key=lambda x: x['created_at']
+                    ),
                     'total_calories': round(calories_per_meal.get(MealType.LUNCH, 0))
                 },
                 MealType.DINNER: {
-                    'foods': grouped_logs.get(MealType.DINNER, []),
+                    'foods': sorted(
+                        grouped_logs.get(MealType.DINNER, []),
+                        key=lambda x: x['created_at']
+                    ),
                     'total_calories': round(calories_per_meal.get(MealType.DINNER, 0))
                 },
                 MealType.SNACK: {
-                    'foods': grouped_logs.get(MealType.SNACK, []),
+                    'foods': sorted(
+                        grouped_logs.get(MealType.SNACK, []),
+                        key=lambda x: x['created_at']
+                    ),
                     'total_calories': round(calories_per_meal.get(MealType.SNACK, 0))
                 }
             }
@@ -143,7 +156,7 @@ class UserService:
         return user
 
     @staticmethod
-    def update_user_profile(user_id: uuid.UUID, data: UpdateUserProfileSchema):
+    def update_user_profile(user_id: uuid.UUID, data: UpdateUserProfileSchema):        
         # Retrieve user
         user = UserRepository.find_by_id(user_id)
         if not user:
@@ -194,7 +207,18 @@ class UserService:
 
         user = UserRepository.save(user)
 
-        return user
+        return {
+            'id': user.id,
+            'name': user.name,
+            'birthday': user.birthday.isoformat(),
+            'age': user.age,
+            'height_cm': user.height_cm,
+            'weight_kg': user.weight_kg,
+            'activity_level': user.activity_level,
+            'main_goal': user.main_goal,
+            'bmi': user.bmi,
+            'bmi_status': user.bmi_status,
+        }
     
     @staticmethod
     def calculate_user_metrics(user: User):

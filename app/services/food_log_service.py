@@ -62,6 +62,11 @@ class FoodLogService:
         total_fat = serving.fat_g * factor
         total_carbs = serving.carbohydrate_g * factor
 
+        servings_sorted = sorted(
+            food_log.food.servings,
+            key=lambda s: not s.is_default
+        )
+
         # Get all servings for this food
         servings_list = [
             {
@@ -72,9 +77,10 @@ class FoodLogService:
                 'calories_kcal': round(serving.calories_kcal),
                 'carbohydrates_g': round(serving.carbohydrate_g, 1),
                 'proteins_g': round(serving.protein_g, 1),
-                'fats_g': round(serving.fat_g, 1)
+                'fats_g': round(serving.fat_g, 1),
+                'is_default': serving.is_default,
             }
-            for serving in food_log.food.servings
+            for serving in servings_sorted
         ]
         
         return {
@@ -86,7 +92,7 @@ class FoodLogService:
             'fats': round(total_fat, 2),
             'meal_type': food_log.meal_type,
             'serving_id': food_log.serving_id,
-            'number_of_units': factor,
+            'number_of_units': food_log.number_of_units,
             'servings': servings_list,
         }
     

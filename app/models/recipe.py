@@ -42,6 +42,7 @@ class Recipe(Base):
     kalium_per_serving_mg: Mapped[float] = mapped_column(Float, nullable=False)
 
     image_url: Mapped[str | None] = mapped_column(String(255), nullable=True)
+    image_path: Mapped[str | None] = mapped_column(String(255), nullable=True)
 
     health_category: Mapped[HealthCategory] = mapped_column(
         SQLEnum(HealthCategory, name="health_category_enum", values_callable=enum_values), nullable=False

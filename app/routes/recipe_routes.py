@@ -4,7 +4,7 @@ from flask import Blueprint, request
 from flask_jwt_extended import get_jwt_identity, jwt_required
 from app.services.recipe_service import RecipeService
 from app.services.comment_service import CommentService
-from app.schemas.recipe_comment_schema import CreateRecipeCommentSchema
+from app.schemas.recipe_comment_schema import CommentsListQueryParams, CreateRecipeCommentSchema
 from app.schemas.recipe_schema import RecipesListQueryParams
 from app.middlewares.uuid_middleware import validate_uuid_params
 from app.utils.responses import success_response
@@ -18,10 +18,11 @@ def get_recipes_list():
     params = RecipesListQueryParams(**request.args)
 
     # Call service to get all recipes
-    result = RecipeService.get_all_recipes(params)
+    result, pagination = RecipeService.get_all_recipes(params)
 
     return success_response(
         data=result,
+        pagination=pagination,
         message='Recipes retrieved successfully',
         status_code=HTTPStatus.OK
     )
@@ -36,6 +37,26 @@ def get_recipe_detail(recipe_id):
     return success_response(
         data=result,
         message='Recipe detail retrieved successfully',
+        status_code=HTTPStatus.OK
+    )
+
+@recipe_bp.route('/<recipe_id>/comments', methods=[HTTPMethod.GET])
+@jwt_required()
+@validate_uuid_params('recipe_id')
+def get_recipe_comments(recipe_id: uuid.UUID):
+    # Validate query parameters
+    params = CommentsListQueryParams(**request.args)
+    
+    # Get user ID from JWT
+    user_id = get_jwt_identity()
+
+    # Call service to get recipe comments
+    data, pagination = CommentService.get_recipe_comments(recipe_id, user_id, params)
+
+    return success_response(
+        data=data,
+        pagination=pagination,
+        message='Recipe comments retrieved successfully',
         status_code=HTTPStatus.OK
     )
 

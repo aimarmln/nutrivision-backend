@@ -1,1 +1,26 @@
-# Will be implemented later
+import uuid
+from http import HTTPStatus, HTTPMethod
+from flask import Blueprint
+from flask_jwt_extended import get_jwt_identity, jwt_required
+from app.middlewares.uuid_middleware import validate_uuid_params
+from app.services.comment_service import CommentService
+from app.utils.responses import success_response
+
+comment_bp = Blueprint('comments', __name__, url_prefix='/api/comments')
+
+import time
+
+@comment_bp.route('/<comment_id>', methods=[HTTPMethod.DELETE])
+@jwt_required()
+@validate_uuid_params('comment_id')
+def delete_comment(comment_id: uuid.UUID):
+    # Get user ID from JWT
+    user_id = get_jwt_identity()
+
+    # Call service to delete comment
+    CommentService.delete_recipe_comment(comment_id, user_id)
+
+    return success_response(
+        message='Comment deleted successfully',
+        status_code=HTTPStatus.OK
+    )
