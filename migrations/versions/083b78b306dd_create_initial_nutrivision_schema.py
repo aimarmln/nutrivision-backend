@@ -5,7 +5,6 @@ Revises:
 Create Date: 2026-02-16 19:02:10.138346
 
 """
-import uuid
 import sqlalchemy as sa
 from typing import Sequence, Union
 from alembic import op
@@ -38,7 +37,7 @@ def upgrade() -> None:
     # =========================
     op.create_table(
         "users",
-        sa.Column("id", postgresql.UUID(as_uuid=True), primary_key=True, default=uuid.uuid4),
+        sa.Column("id", sa.Integer, primary_key=True, autoincrement=True),
         sa.Column("email", sa.String(100), nullable=False, unique=True),
         sa.Column("password", sa.String(255), nullable=False),
         sa.Column("name", sa.String(100), nullable=False),
@@ -68,7 +67,7 @@ def upgrade() -> None:
     # =========================
     op.create_table(
         "foods",
-        sa.Column("id", postgresql.UUID(as_uuid=True), primary_key=True, default=uuid.uuid4),
+        sa.Column("id", sa.Integer, primary_key=True, autoincrement=True),
         sa.Column("name", sa.String(150), nullable=False),
         sa.Column("yolo_label", sa.String(50), unique=True),
         sa.Column("calories_per_100g_kcal", sa.Float, nullable=False),
@@ -93,7 +92,7 @@ def upgrade() -> None:
     # =========================
     op.create_table(
         "recipes",
-        sa.Column("id", postgresql.UUID(as_uuid=True), primary_key=True, default=uuid.uuid4),
+        sa.Column("id", sa.Integer, primary_key=True, autoincrement=True),
         sa.Column("name", sa.String(255), nullable=False),
         sa.Column("description", sa.Text, nullable=False),
         sa.Column("ingredients", sa.Text, nullable=False),
@@ -109,6 +108,7 @@ def upgrade() -> None:
         sa.Column("sodium_per_serving_mg", sa.Float, nullable=False),
         sa.Column("kalium_per_serving_mg", sa.Float, nullable=False),
         sa.Column("image_url", sa.String(255)),
+        sa.Column("image_path", sa.String(length=255), nullable=True),
         sa.Column("health_category", postgresql.ENUM("Healthy", "Unhealthy", name="health_category_enum", create_type=False), nullable=False),
         sa.Column("is_deleted", sa.Boolean, nullable=False, server_default=sa.text("false")),
         sa.Column("created_at", sa.DateTime, server_default=sa.func.now()),
@@ -122,9 +122,9 @@ def upgrade() -> None:
     # =========================
     op.create_table(
         "food_logs",
-        sa.Column("id", postgresql.UUID(as_uuid=True), primary_key=True, default=uuid.uuid4),
-        sa.Column("user_id", postgresql.UUID(as_uuid=True), sa.ForeignKey("users.id"), nullable=False),
-        sa.Column("food_id", postgresql.UUID(as_uuid=True), sa.ForeignKey("foods.id"), nullable=False),
+        sa.Column("id", sa.Integer, primary_key=True, autoincrement=True),
+        sa.Column("user_id", sa.Integer, sa.ForeignKey("users.id"), nullable=False),
+        sa.Column("food_id", sa.Integer, sa.ForeignKey("foods.id"), nullable=False),
         sa.Column("meal_type", postgresql.ENUM("Breakfast", "Lunch", "Dinner", "Snack", name="meal_type_enum", create_type=False), nullable=False),
         sa.Column("weight_grams", sa.Float, nullable=False),
         sa.Column("calories", sa.Float, nullable=False),
@@ -143,9 +143,9 @@ def upgrade() -> None:
     # =========================
     op.create_table(
         "comments",
-        sa.Column("id", postgresql.UUID(as_uuid=True), primary_key=True, default=uuid.uuid4),
-        sa.Column("user_id", postgresql.UUID(as_uuid=True), sa.ForeignKey("users.id"), nullable=False),
-        sa.Column("recipe_id", postgresql.UUID(as_uuid=True), sa.ForeignKey("recipes.id"), nullable=False),
+        sa.Column("id", sa.Integer, primary_key=True, autoincrement=True),
+        sa.Column("user_id", sa.Integer, sa.ForeignKey("users.id"), nullable=False),
+        sa.Column("recipe_id", sa.Integer, sa.ForeignKey("recipes.id"), nullable=False),
         sa.Column("text", sa.Text, nullable=False),
         sa.Column("sentiment", postgresql.ENUM("Positive", "Negative", "Neutral", name="sentiment_enum", create_type=False), nullable=False),
         sa.Column("is_deleted", sa.Boolean, nullable=False, server_default=sa.text("false")),

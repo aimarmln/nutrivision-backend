@@ -1,11 +1,10 @@
-import uuid
 from datetime import datetime
 from typing import TYPE_CHECKING
 from pgvector.sqlalchemy import Vector
 from sqlalchemy.orm import Mapped, mapped_column, relationship
-from sqlalchemy import String, DateTime, Boolean, func
+from sqlalchemy import Integer, String, DateTime, Boolean, func
 from sqlalchemy import String, DateTime
-from sqlalchemy.dialects.postgresql import UUID, TSVECTOR
+from sqlalchemy.dialects.postgresql import TSVECTOR
 from app.database import Base
 
 if TYPE_CHECKING:
@@ -14,9 +13,10 @@ if TYPE_CHECKING:
 class Food(Base):
     __tablename__ = "foods"
 
-    id: Mapped[uuid.UUID] = mapped_column(
-        UUID(as_uuid=True),
-        primary_key=True
+    id: Mapped[int] = mapped_column(
+        Integer,
+        primary_key=True,
+        autoincrement=True
     )
 
     name: Mapped[str] = mapped_column(String(150), nullable=False)

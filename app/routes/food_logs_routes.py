@@ -1,8 +1,7 @@
-import uuid
 from http import HTTPStatus, HTTPMethod
 from flask import Blueprint, request
 from flask_jwt_extended import get_jwt_identity, jwt_required
-from app.middlewares.uuid_middleware import validate_uuid_params
+from werkzeug.exceptions import BadRequest
 from app.services.food_log_service import FoodLogService
 from app.schemas.food_log_schema import CreateFoodLogSchema, UpdateFoodLogSchema
 from app.utils.responses import success_response
@@ -28,10 +27,13 @@ def create_food_log():
         status_code=HTTPStatus.CREATED
     )
 
-@food_log_bp.route('/<food_log_id>', methods=[HTTPMethod.GET])
+@food_log_bp.route('/<int:food_log_id>', methods=[HTTPMethod.GET])
 @jwt_required()
-@validate_uuid_params('food_log_id')
-def get_food_log_detail(food_log_id: uuid.UUID):
+def get_food_log_detail(food_log_id: int):
+    # Validate food log ID
+    if food_log_id <= 0:
+        return BadRequest('Invalid food log ID. Must be a positive integer.')
+
     # Get user ID from JWT
     user_id = get_jwt_identity()    
 
@@ -44,10 +46,13 @@ def get_food_log_detail(food_log_id: uuid.UUID):
         status_code=HTTPStatus.OK
     )
 
-@food_log_bp.route('/<food_log_id>', methods=[HTTPMethod.PUT])
+@food_log_bp.route('/<int:food_log_id>', methods=[HTTPMethod.PUT])
 @jwt_required()
-@validate_uuid_params('food_log_id')
-def update_food_log(food_log_id: uuid.UUID):
+def update_food_log(food_log_id: int):
+    # Validate food log ID
+    if food_log_id <= 0:
+        return BadRequest('Invalid food log ID. Must be a positive integer.')
+     
     # Get user ID from JWT
     user_id = get_jwt_identity()
 
@@ -64,10 +69,13 @@ def update_food_log(food_log_id: uuid.UUID):
         status_code=HTTPStatus.OK
     )
 
-@food_log_bp.route('/<food_log_id>', methods=[HTTPMethod.DELETE])
+@food_log_bp.route('/<int:food_log_id>', methods=[HTTPMethod.DELETE])
 @jwt_required()
-@validate_uuid_params('food_log_id')
-def delete_food_log(food_log_id: uuid.UUID):
+def delete_food_log(food_log_id: int):
+    # Validate food log ID
+    if food_log_id <= 0:
+        return BadRequest('Invalid food log ID. Must be a positive integer.')
+    
     # Get user ID from JWT
     user_id = get_jwt_identity()
 

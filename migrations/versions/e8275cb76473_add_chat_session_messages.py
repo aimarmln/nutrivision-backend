@@ -6,7 +6,6 @@ Create Date: 2026-04-12 21:36:51.279593
 
 """
 from typing import Sequence, Union
-import uuid
 
 from alembic import op
 import sqlalchemy as sa
@@ -35,14 +34,14 @@ def upgrade() -> None:
         "chat_sessions",
         sa.Column(
             "id",
-            postgresql.UUID(as_uuid=True),
+            sa.Integer,
             primary_key=True,
-            default=uuid.uuid4
+            autoincrement=True
         ),
 
         sa.Column(
             "user_id",
-            postgresql.UUID(as_uuid=True),
+            sa.Integer,
             sa.ForeignKey("users.id", ondelete="CASCADE"),
             nullable=False
         ),
@@ -70,14 +69,14 @@ def upgrade() -> None:
         "chat_messages",
         sa.Column(
             "id",
-            postgresql.UUID(as_uuid=True),
+            sa.Integer,
             primary_key=True,
-            default=uuid.uuid4
+            autoincrement=True
         ),
 
         sa.Column(
             "session_id",
-            postgresql.UUID(as_uuid=True),
+            sa.Integer,
             sa.ForeignKey("chat_sessions.id", ondelete="CASCADE"),
             nullable=False
         ),

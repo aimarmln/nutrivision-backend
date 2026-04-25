@@ -1,4 +1,3 @@
-import uuid
 from datetime import datetime
 from sqlalchemy import func
 from sqlalchemy.orm import joinedload
@@ -9,7 +8,7 @@ from app.constants.comment import Sentiment
 class CommentRepository:
 
     @staticmethod
-    def find_by_id(comment_id: uuid.UUID) -> Comment | None:
+    def find_by_id(comment_id: int) -> Comment | None:
         with SessionLocal() as session:
             return (
                 session.query(Comment)
@@ -19,7 +18,7 @@ class CommentRepository:
 
     @staticmethod
     def find_by_recipe_id(
-        recipe_id: uuid.UUID,
+        recipe_id: int,
         last_created_at: datetime | None = None,
         limit: int = 20
     ) -> list[Comment]:
@@ -39,7 +38,7 @@ class CommentRepository:
             )
         
     @staticmethod
-    def count_positive_comments_by_recipe_id(recipe_id: uuid.UUID) -> int:
+    def count_positive_comments_by_recipe_id(recipe_id: int) -> int:
         with SessionLocal() as session:
             return (
                 session.query(func.count(Comment.id))

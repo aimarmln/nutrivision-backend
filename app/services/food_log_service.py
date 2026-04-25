@@ -1,5 +1,4 @@
 from typing import Optional
-import uuid
 from datetime import datetime, timezone
 from werkzeug.exceptions import NotFound, BadRequest
 from app.constants.food_log import MealType
@@ -12,7 +11,7 @@ from app.schemas.food_log_schema import BulkUpdateFoodLogSchema, CreateFoodLogSc
 class FoodLogService:
     
     @staticmethod
-    def create_food_log(user_id: uuid.UUID, data: CreateFoodLogSchema):
+    def create_food_log(user_id: int, data: CreateFoodLogSchema):
         # Validate food exists
         food = FoodRepository.find_by_id(data.food_id)
         if not food:
@@ -29,7 +28,6 @@ class FoodLogService:
         
         # Create food log entry
         food_log = FoodLog(
-            id=uuid.uuid4(),
             user_id=user_id,
             food_id=data.food_id,
             serving_id=data.serving_id,
@@ -43,7 +41,7 @@ class FoodLogService:
         return
     
     @staticmethod
-    def get_food_log_detail(user_id: uuid.UUID, food_log_id: uuid.UUID):
+    def get_food_log_detail(user_id: int, food_log_id: int):
         # Retrieve food log entry
         food_log = FoodLogRepository.find_by_id_and_user(
             food_log_id, 
@@ -99,7 +97,7 @@ class FoodLogService:
         }
     
     @staticmethod
-    def update_food_log(user_id: uuid.UUID, food_log_id: uuid.UUID, data: UpdateFoodLogSchema):
+    def update_food_log(user_id: int, food_log_id: int, data: UpdateFoodLogSchema):
         # Retrieve food log entry
         food_log = FoodLogRepository.find_by_id_and_user(food_log_id, user_id)
         if not food_log:
@@ -125,7 +123,7 @@ class FoodLogService:
         return
     
     @staticmethod
-    def delete_food_log(user_id: uuid.UUID, food_log_id: uuid.UUID):
+    def delete_food_log(user_id: int, food_log_id: int):
         # Retrieve food log entry
         food_log = FoodLogRepository.find_by_id_and_user(food_log_id, user_id)
         if not food_log:
@@ -142,7 +140,7 @@ class FoodLogService:
     
     # AI utilities
     @staticmethod
-    def get_today_logs(user_id: uuid.UUID, meal_type: Optional[MealType]) -> list[FoodLog]:
+    def get_today_logs(user_id: int, meal_type: Optional[MealType]) -> list[FoodLog]:
         logs =  FoodLogRepository.find_by_user_id_and_date(
             user_id=user_id,
             log_date=datetime.now().date(),
@@ -154,7 +152,7 @@ class FoodLogService:
         return logs
     
     @staticmethod
-    def bulk_add_food_logs(user_id: uuid.UUID, data: BulkAddFoodLogSchema) -> list[FoodLog]:
+    def bulk_add_food_logs(user_id: int, data: BulkAddFoodLogSchema) -> list[FoodLog]:
         logs = data.items
 
         if not logs:
@@ -189,7 +187,6 @@ class FoodLogService:
                 raise BadRequest("Serving does not belong to the specified food")
 
             food_log = FoodLog(
-                id=uuid.uuid4(),
                 user_id=user_id,
                 food_id=item.food_id,
                 serving_id=item.serving_id,
@@ -214,7 +211,7 @@ class FoodLogService:
         )
     
     @staticmethod
-    def bulk_edit_food_logs(user_id: uuid.UUID, data: BulkUpdateFoodLogSchema):
+    def bulk_edit_food_logs(user_id: int, data: BulkUpdateFoodLogSchema):
         updates = data.updates
 
         # Get all log IDs from the updates
@@ -262,7 +259,7 @@ class FoodLogService:
         return updated_logs
     
     @staticmethod
-    def bulk_delete_food_logs(user_id:uuid.UUID, log_ids: list[uuid.UUID]) -> list[FoodLog]:
+    def bulk_delete_food_logs(user_id: int, log_ids: list[int]) -> list[FoodLog]:
         if not log_ids:
             raise BadRequest("No log IDs provided")
 

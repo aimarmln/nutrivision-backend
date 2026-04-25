@@ -1,4 +1,3 @@
-import uuid
 from werkzeug.exceptions import NotFound, InternalServerError
 from collections import defaultdict
 from datetime import date, datetime, timezone
@@ -19,7 +18,7 @@ from app.utils.user import (
 class UserService:
 
     @staticmethod
-    def get_user_summary(user_id: uuid.UUID):
+    def get_user_summary(user_id: int):
         # Retrieve user
         user = UserRepository.find_by_id(user_id)
         if not user:
@@ -110,7 +109,7 @@ class UserService:
         }
     
     @staticmethod
-    def get_user_profile(user_id: uuid.UUID):
+    def get_user_profile(user_id: int):
         user = UserRepository.find_by_id(user_id)
         if not user:
             raise NotFound('User not found')
@@ -129,7 +128,7 @@ class UserService:
         }
     
     @staticmethod
-    def complete_user_profile(user_id: uuid.UUID, data: CompleteUserProfileSchema):
+    def complete_user_profile(user_id: int, data: CompleteUserProfileSchema):
         # Retrieve user
         user = UserRepository.find_by_id(user_id)
         if not user:
@@ -156,7 +155,7 @@ class UserService:
         return user
 
     @staticmethod
-    def update_user_profile(user_id: uuid.UUID, data: UpdateUserProfileSchema):        
+    def update_user_profile(user_id: int, data: UpdateUserProfileSchema):        
         # Retrieve user
         user = UserRepository.find_by_id(user_id)
         if not user:

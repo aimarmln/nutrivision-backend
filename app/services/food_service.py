@@ -1,9 +1,10 @@
-import uuid
 from werkzeug.exceptions import NotFound, InternalServerError
 from werkzeug.datastructures import FileStorage
 from app.schemas.food_schema import FoodsListQueryParams
 from app.extensions import yolo_detector
 from app.repositories.food_repository import FoodRepository
+from app.repositories.serving_repository import ServingRepository
+from app.repositories.food_log_repository import FoodLogRepository
 
 class FoodService:
 
@@ -56,7 +57,7 @@ class FoodService:
         return results, pagination
 
     @staticmethod
-    def get_food_detail(food_id: uuid.UUID):
+    def get_food_detail(food_id: int) -> dict:
         # Retrieve food detail by ID
         food = FoodRepository.find_by_id(id=food_id, preload_servings=True)
         if not food:

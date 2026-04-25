@@ -1,26 +1,27 @@
-import uuid
 from datetime import datetime
-
-from sqlalchemy import Text, String, DateTime, ForeignKey, func
-from sqlalchemy.dialects.postgresql import UUID, ENUM as SQLEnum
+from sqlalchemy import Integer, Text, String, DateTime, ForeignKey, func
+from sqlalchemy.dialects.postgresql import ENUM as SQLEnum
 from sqlalchemy.orm import Mapped, mapped_column, relationship
-
 from app.constants.chat import ChatMessageRole
 from app.database import Base
-# from app.models.chat_session import ChatSession
 from app.utils.enum import enum_values
+from typing import TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from app.models.chat_session import ChatSession
 
 class ChatMessage(Base):
     __tablename__ = "chat_messages"
 
     # ✅ REQUIRED
-    id: Mapped[uuid.UUID] = mapped_column(
-        UUID(as_uuid=True),
-        primary_key=True
+    id: Mapped[int] = mapped_column(
+        Integer,
+        primary_key=True,
+        autoincrement=True
     )
 
-    session_id: Mapped[uuid.UUID] = mapped_column(
-        UUID(as_uuid=True),
+    session_id: Mapped[int] = mapped_column(
+        Integer,
         ForeignKey("chat_sessions.id", ondelete="CASCADE"),
         nullable=False
     )
@@ -35,7 +36,6 @@ class ChatMessage(Base):
         nullable=False
     )
 
-    # ✅ DEFAULT (fix di sini)
     created_at: Mapped[datetime] = mapped_column(
         DateTime,
         nullable=False,
@@ -49,7 +49,6 @@ class ChatMessage(Base):
         default=None
     )
 
-    # ✅ RELATIONSHIP terakhir
     session: Mapped["ChatSession"] = relationship(
         "ChatSession",
         back_populates="messages"

@@ -1,11 +1,10 @@
-import uuid
 from app.database import SessionLocal
 from app.models.user import User
 
 class UserRepository:
     
     @staticmethod
-    def find_by_id(id: uuid.UUID) -> User | None:
+    def find_by_id(id: int) -> User | None:
         with SessionLocal() as session:
             return (
                 session.query(User)

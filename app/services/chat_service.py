@@ -1,7 +1,7 @@
 from app.repositories.food_repository import FoodRepository
 from langchain.messages import HumanMessage
 from app.repositories.serving_repository import ServingRepository
-from app.agent.agent import agent
+from app.agent.agent import agent, Context
 
 class ChatService:
 
@@ -11,14 +11,14 @@ class ChatService:
             {
                 "messages": [
                     HumanMessage(content=message)
-                ],
-                "user_id": user_id
+                ]
             },
             {
                 "configurable": { 
                     "thread_id": user_id
                 }
             },
+            context=Context(user_id=user_id)
         )
 
         return result["messages"][-1].content

@@ -1,4 +1,3 @@
-import uuid
 from datetime import datetime
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 from sqlalchemy import (
@@ -7,9 +6,9 @@ from sqlalchemy import (
     DateTime,
     Enum as SQLEnum,
     ForeignKey,
+    Integer,
     func
 )
-from sqlalchemy.dialects.postgresql import UUID
 from app.database import Base
 from app.constants.food_log import MealType
 from app.models.food import Food
@@ -21,25 +20,27 @@ from app.utils.enum import enum_values
 class FoodLog(Base):
     __tablename__ = "food_logs"
 
-    id: Mapped[uuid.UUID] = mapped_column(
-        UUID(as_uuid=True),
-        primary_key=True
+    id: Mapped[int] = mapped_column(
+        Integer,
+        primary_key=True,
+        autoincrement=True,
+        init=False
     )
 
-    user_id: Mapped[uuid.UUID] = mapped_column(
-        UUID(as_uuid=True),
+    user_id: Mapped[int] = mapped_column(
+        Integer,
         ForeignKey("users.id"),
         nullable=False
     )
 
-    food_id: Mapped[uuid.UUID] = mapped_column(
-        UUID(as_uuid=True),
+    food_id: Mapped[int] = mapped_column(
+        Integer,
         ForeignKey("foods.id"),
         nullable=False
     )
 
-    serving_id: Mapped[uuid.UUID] = mapped_column(
-        UUID(as_uuid=True),
+    serving_id: Mapped[int] = mapped_column(
+        Integer,
         ForeignKey('servings.id'),
         nullable=False
     )

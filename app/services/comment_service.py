@@ -1,4 +1,3 @@
-import uuid
 from datetime import datetime, timezone
 from werkzeug.exceptions import NotFound
 from app.extensions import sentiment_analyzer
@@ -10,7 +9,7 @@ from app.schemas.recipe_comment_schema import CommentsListQueryParams, CreateRec
 class CommentService:
 
     @staticmethod
-    def create_recipe_comment(recipe_id: uuid.UUID, user_id: uuid.UUID, data: CreateRecipeCommentSchema):
+    def create_recipe_comment(recipe_id: int, user_id: int, data: CreateRecipeCommentSchema):
         # Validate recipe existence
         recipe = RecipeRepository.find_by_id(recipe_id)
         if not recipe:
@@ -21,7 +20,6 @@ class CommentService:
         
         # Create comment object
         new_comment = Comment(
-            id=uuid.uuid4(),
             recipe_id=recipe_id,
             user_id=user_id,
             text=data.comment,
@@ -42,7 +40,7 @@ class CommentService:
         }
     
     @staticmethod
-    def get_recipe_comments(recipe_id: uuid.UUID, user_id: uuid.UUID, params: CommentsListQueryParams):
+    def get_recipe_comments(recipe_id: int, user_id: int, params: CommentsListQueryParams):
         # Retrieve comments for the recipe
         comments = CommentRepository.find_by_recipe_id(
             recipe_id=recipe_id,
@@ -78,7 +76,7 @@ class CommentService:
         }
     
     @staticmethod
-    def delete_recipe_comment(comment_id: uuid.UUID, user_id: uuid.UUID):
+    def delete_recipe_comment(comment_id: int, user_id: int):
         # Retrieve comment
         comment = CommentRepository.find_by_id(comment_id)
         if not comment:

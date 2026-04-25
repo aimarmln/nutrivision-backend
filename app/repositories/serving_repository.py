@@ -1,4 +1,3 @@
-import uuid
 from sqlalchemy.orm import joinedload
 from app.database import SessionLocal
 from app.models.serving import Serving
@@ -7,7 +6,7 @@ from app.extensions import embeddings
 class ServingRepository:
 
     @staticmethod
-    def find_by_id(id: uuid.UUID) -> Serving | None:
+    def find_by_id(id: int) -> Serving | None:
         with SessionLocal() as session:
             return (
                 session.query(Serving)
@@ -16,7 +15,7 @@ class ServingRepository:
             )
         
     @staticmethod
-    def find_many_by_ids(ids: list[uuid.UUID]) -> list[Serving]:
+    def find_many_by_ids(ids: list[int]) -> list[Serving]:
         with SessionLocal() as session:
             return (
                 session.query(Serving)
@@ -25,7 +24,7 @@ class ServingRepository:
             )
         
     @staticmethod
-    def get_food_servings(food_id: str, serving: str) -> list[tuple[Serving, float]]:
+    def get_food_servings(food_id: int, serving: str) -> list[tuple[Serving, float]]:
         query_vector = embeddings.encode(serving, normalize_embeddings=True).tolist()
 
         with SessionLocal() as session:

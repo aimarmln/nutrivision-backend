@@ -1,12 +1,11 @@
-import uuid
 from http import HTTPStatus, HTTPMethod
 from flask import Blueprint, request
 from flask_jwt_extended import get_jwt_identity, jwt_required
+from werkzeug.exceptions import BadRequest
 from app.services.recipe_service import RecipeService
 from app.services.comment_service import CommentService
 from app.schemas.recipe_comment_schema import CommentsListQueryParams, CreateRecipeCommentSchema
 from app.schemas.recipe_schema import RecipesListQueryParams
-from app.middlewares.uuid_middleware import validate_uuid_params
 from app.utils.responses import success_response
 
 recipe_bp = Blueprint('recipes', __name__, url_prefix='/api/recipes')
@@ -27,10 +26,13 @@ def get_recipes_list():
         status_code=HTTPStatus.OK
     )
 
-@recipe_bp.route('/<recipe_id>', methods=[HTTPMethod.GET])
+@recipe_bp.route('/<int:recipe_id>', methods=[HTTPMethod.GET])
 @jwt_required()
-@validate_uuid_params('recipe_id')
-def get_recipe_detail(recipe_id):
+def get_recipe_detail(recipe_id: int):
+    # Validate recipe ID
+    if recipe_id <= 0:
+        return BadRequest('Invalid recipe ID. Must be a positive integer.')
+
     # Call service to get recipe detail
     result = RecipeService.get_recipe_detail(recipe_id)
 
@@ -40,10 +42,12 @@ def get_recipe_detail(recipe_id):
         status_code=HTTPStatus.OK
     )
 
-@recipe_bp.route('/<recipe_id>/comments', methods=[HTTPMethod.GET])
+@recipe_bp.route('/<int:recipe_id>/comments', methods=[HTTPMethod.GET])
 @jwt_required()
-@validate_uuid_params('recipe_id')
-def get_recipe_comments(recipe_id: uuid.UUID):
+def get_recipe_comments(recipe_id: int):
+    # Validate recipe ID
+    if recipe_id <= 0:
+        return BadRequest('Invalid recipe ID. Must be a positive integer.')
     # Validate query parameters
     params = CommentsListQueryParams(**request.args)
     
@@ -60,10 +64,13 @@ def get_recipe_comments(recipe_id: uuid.UUID):
         status_code=HTTPStatus.OK
     )
 
-@recipe_bp.route('/<recipe_id>/comments', methods=[HTTPMethod.POST])
+@recipe_bp.route('/<int:recipe_id>/comments', methods=[HTTPMethod.POST])
 @jwt_required()
-@validate_uuid_params('recipe_id')
-def create_recipe_comment(recipe_id: uuid.UUID):
+def create_recipe_comment(recipe_id: int):
+    # Validate recipe ID
+    if recipe_id <= 0:
+        return BadRequest('Invalid recipe ID. Must be a positive integer.')
+    
     # Validate request payload
     raw_data = request.get_json()
     validated_data = CreateRecipeCommentSchema(**raw_data)

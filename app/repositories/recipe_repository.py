@@ -1,4 +1,3 @@
-import uuid
 from sqlalchemy import func, and_
 from app.database import SessionLocal
 from app.models.recipe import Recipe
@@ -8,7 +7,7 @@ from app.constants.comment import Sentiment
 class RecipeRepository:
 
     @staticmethod
-    def find_by_id(recipe_id: uuid.UUID) -> Recipe | None:
+    def find_by_id(recipe_id: int) -> Recipe | None:
         with SessionLocal() as session:
             return (
                 session.query(Recipe)

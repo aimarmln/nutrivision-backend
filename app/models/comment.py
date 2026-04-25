@@ -1,8 +1,6 @@
-import uuid
 from datetime import datetime
 from sqlalchemy.orm import Mapped, mapped_column, relationship
-from sqlalchemy import Boolean, Text, DateTime, Enum as SQLEnum, ForeignKey, func
-from sqlalchemy.dialects.postgresql import UUID
+from sqlalchemy import Boolean, Integer, Text, DateTime, Enum as SQLEnum, ForeignKey, func
 from app.database import Base
 from app.constants.comment import Sentiment
 from app.models.user import User
@@ -12,19 +10,21 @@ from app.utils.enum import enum_values
 class Comment(Base):
     __tablename__ = "comments"
     
-    id: Mapped[uuid.UUID] = mapped_column(
-        UUID(as_uuid=True),
-        primary_key=True
+    id: Mapped[int] = mapped_column(
+        Integer,
+        primary_key=True,
+        autoincrement=True,
+        init=False
     )
 
-    user_id: Mapped[uuid.UUID] = mapped_column(
-        UUID(as_uuid=True),
+    user_id: Mapped[int] = mapped_column(
+        Integer,
         ForeignKey("users.id", ondelete="CASCADE"),
         nullable=False
     )
 
-    recipe_id: Mapped[uuid.UUID] = mapped_column(
-        UUID(as_uuid=True),
+    recipe_id: Mapped[int] = mapped_column(
+        Integer,
         ForeignKey("recipes.id", ondelete="CASCADE"),
         nullable=False
     )

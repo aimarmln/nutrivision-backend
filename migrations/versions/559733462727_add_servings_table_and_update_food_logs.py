@@ -24,25 +24,25 @@ def upgrade() -> None:
     
     # servings table
     op.create_table('servings',
-        sa.Column('id', sa.UUID(), nullable=False),
-        sa.Column('food_id', sa.UUID(), nullable=False),
+        sa.Column('id', sa.Integer, primary_key=True, autoincrement=True),
+        sa.Column('food_id', sa.Integer, sa.ForeignKey('foods.id'), nullable=False),
         sa.Column('serving_unit', sa.String(length=100), nullable=False),
-        sa.Column('number_of_units', sa.Float(), nullable=False),
+        sa.Column('number_of_units', sa.Float, nullable=False),
         sa.Column('description', sa.String(length=255), nullable=True),
-        sa.Column('calories_kcal', sa.Float(), nullable=False),
-        sa.Column('fat_g', sa.Float(), nullable=False),
-        sa.Column('cholesterol_mg', sa.Float(), nullable=False),
-        sa.Column('protein_g', sa.Float(), nullable=False),
-        sa.Column('carbohydrate_g', sa.Float(), nullable=False),
-        sa.Column('fiber_g', sa.Float(), nullable=False),
-        sa.Column('sugar_g', sa.Float(), nullable=False),
-        sa.Column('sodium_mg', sa.Float(), nullable=False),
-        sa.Column('kalium_mg', sa.Float(), nullable=False),
-        sa.Column('is_default', sa.Boolean(), nullable=False),
-        sa.Column('is_deleted', sa.Boolean(), nullable=False, server_default=sa.text("false")),
-        sa.Column('created_at', sa.DateTime(), nullable=False),
-        sa.Column('updated_at', sa.DateTime(), nullable=True),
-        sa.Column('deleted_at', sa.DateTime(), nullable=True),
+        sa.Column('calories_kcal', sa.Float, nullable=False),
+        sa.Column('fat_g', sa.Float, nullable=False),
+        sa.Column('cholesterol_mg', sa.Float, nullable=False),
+        sa.Column('protein_g', sa.Float, nullable=False),
+        sa.Column('carbohydrate_g', sa.Float, nullable=False),
+        sa.Column('fiber_g', sa.Float, nullable=False),
+        sa.Column('sugar_g', sa.Float, nullable=False),
+        sa.Column('sodium_mg', sa.Float, nullable=False),
+        sa.Column('kalium_mg', sa.Float, nullable=False),
+        sa.Column('is_default', sa.Boolean, nullable=False),
+        sa.Column('is_deleted', sa.Boolean, nullable=False, server_default=sa.text("false")),
+        sa.Column('created_at', sa.DateTime, nullable=False),
+        sa.Column('updated_at', sa.DateTime, nullable=True),
+        sa.Column('deleted_at', sa.DateTime, nullable=True),
         sa.ForeignKeyConstraint(['food_id'], ['foods.id'], ondelete='CASCADE'),
         sa.PrimaryKeyConstraint('id')
     )
@@ -54,19 +54,13 @@ def upgrade() -> None:
                existing_server_default=sa.text('now()'))
     
     # food_logs table
-    op.add_column('food_logs', sa.Column('serving_id', sa.UUID(), nullable=False))
-    op.add_column('food_logs', sa.Column('number_of_units', sa.Float(), nullable=False))
+    op.add_column('food_logs', sa.Column('serving_id', sa.Integer, sa.ForeignKey('servings.id'), nullable=False))
+    op.add_column('food_logs', sa.Column('number_of_units', sa.Float, nullable=False))
     op.alter_column('food_logs', 'created_at',
                existing_type=postgresql.TIMESTAMP(),
                nullable=False,
                existing_server_default=sa.text('now()'))
-    op.create_foreign_key(
-        "food_logs_serving_id_fkey",
-        "food_logs",
-        "servings",
-        ["serving_id"],
-        ["id"],
-    )
+    
     op.drop_column('food_logs', 'weight_grams')
     op.drop_column('food_logs', 'fats')
     op.drop_column('food_logs', 'carbohydrates')

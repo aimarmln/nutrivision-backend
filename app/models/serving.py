@@ -1,10 +1,8 @@
-import uuid
 from datetime import datetime
 from typing import TYPE_CHECKING
 from pgvector.sqlalchemy import Vector
 from sqlalchemy.orm import Mapped, mapped_column, relationship
-from sqlalchemy import ForeignKey, String, Float,  Boolean, DateTime, func
-from sqlalchemy.dialects.postgresql import UUID
+from sqlalchemy import ForeignKey, Integer, String, Float,  Boolean, DateTime, func
 from app.database import Base
 
 if TYPE_CHECKING:
@@ -14,13 +12,14 @@ if TYPE_CHECKING:
 class Serving(Base):
     __tablename__ = 'servings'
 
-    id: Mapped[uuid.UUID] = mapped_column(
-        UUID(as_uuid=True),
-        primary_key=True
+    id: Mapped[int] = mapped_column(
+        Integer,
+        primary_key=True,
+        autoincrement=True
     )
 
-    food_id: Mapped[uuid.UUID] = mapped_column(
-        UUID(as_uuid=True),
+    food_id: Mapped[int] = mapped_column(
+        Integer,
         ForeignKey('foods.id', ondelete='CASCADE'),
         nullable=False
     )

@@ -1,9 +1,7 @@
-import uuid
 from werkzeug.exceptions import Conflict, Unauthorized, NotFound
 from werkzeug.security import generate_password_hash, check_password_hash
 from flask_jwt_extended import create_access_token, create_refresh_token
 from app.models.user import User
-import time
 from app.repositories.user_repository import UserRepository
 from app.schemas.auth_schema import CheckEmailSchema, RegisterSchema, LoginSchema
 from app.utils.user import (
@@ -38,7 +36,6 @@ class AuthService:
 
         # Create user object
         user = User(
-            id=uuid.uuid4(),
             email=data.email,
             password=generate_password_hash(data.password),
             name=data.name,

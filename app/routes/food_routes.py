@@ -1,9 +1,8 @@
-import uuid
 from http import HTTPMethod
 from flask import Blueprint, request
 from flask_jwt_extended import jwt_required
+from werkzeug.exceptions import BadRequest
 from app.services.food_service import FoodService
-from app.middlewares.uuid_middleware import validate_uuid_params
 from app.schemas.food_schema import FoodsListQueryParams
 from app.utils.responses import success_response
 from app.utils.validation import validate_image_upload
@@ -25,10 +24,13 @@ def get_foods_list():
         pagination=pagination,
     )
 
-@food_bp.route('/<food_id>', methods=[HTTPMethod.GET])
+@food_bp.route('/<int:food_id>', methods=[HTTPMethod.GET])
 @jwt_required()
-@validate_uuid_params('food_id')
-def get_food_detail(food_id: uuid.UUID):
+def get_food_detail(food_id: int):
+    # Validate food ID
+    if food_id <= 0:
+        return BadRequest('Invalid food ID. Must be a positive integer.')
+
     # Call service to get food detail
     result = FoodService.get_food_detail(food_id)
 

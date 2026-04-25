@@ -1,8 +1,6 @@
-import uuid
 from datetime import datetime
 from sqlalchemy.orm import Mapped, mapped_column
 from sqlalchemy import String, Integer, Float, Boolean, Date, DateTime, Enum as SQLEnum, func
-from sqlalchemy.dialects.postgresql import UUID
 from app.database import Base
 from app.constants.user import Gender, ActivityLevel, MainGoal, BMIStatus
 from app.utils.enum import enum_values
@@ -10,9 +8,11 @@ from app.utils.enum import enum_values
 class User(Base):
     __tablename__ = "users"
 
-    id: Mapped[uuid.UUID] = mapped_column(
-        UUID(as_uuid=True),
-        primary_key=True
+    id: Mapped[int] = mapped_column(
+        Integer,
+        primary_key=True,
+        autoincrement=True,
+        init=False
     )
 
     email: Mapped[str] = mapped_column(

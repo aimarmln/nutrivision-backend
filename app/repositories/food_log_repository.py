@@ -1,7 +1,6 @@
-import uuid
 from sqlalchemy.orm import joinedload
 from typing import List
-from datetime import date, datetime, time, timezone
+from datetime import date, datetime, time
 from zoneinfo import ZoneInfo
 from app.constants.food_log import MealType
 from app.database import SessionLocal
@@ -19,8 +18,8 @@ class FoodLogRepository:
         
     @staticmethod
     def find_by_id_and_user(
-        food_log_id: uuid.UUID,
-        user_id: uuid.UUID,
+        food_log_id: int,
+        user_id: int,
         preload_user: bool = False,
         preload_food: bool = False,
         preload_serving: bool = False,
@@ -49,7 +48,7 @@ class FoodLogRepository:
 
     @staticmethod
     def find_by_user_id_and_date(
-        user_id: uuid.UUID,
+        user_id: int,
         log_date: date,
         meal_type: MealType = None,
         preload_food: bool = False,
@@ -92,8 +91,8 @@ class FoodLogRepository:
 
     @staticmethod
     def find_many_by_ids_and_user(
-        log_ids: list[uuid.UUID],
-        user_id: uuid.UUID,
+        log_ids: list[int],
+        user_id: int,
         preload_food: bool = False,
         preload_serving: bool = False,
         preload_food_servings: bool = False

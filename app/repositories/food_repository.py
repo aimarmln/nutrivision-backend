@@ -1,4 +1,3 @@
-import uuid
 from sqlalchemy import case, func, or_, desc
 from sqlalchemy.orm import joinedload
 from app.constants.food import FOOD_CATEGORY_ORDER
@@ -85,7 +84,7 @@ class FoodRepository:
             )
 
     @staticmethod
-    def find_by_id(id: uuid.UUID, preload_servings: bool = False) -> Food | None:
+    def find_by_id(id: int, preload_servings: bool = False) -> Food | None:
         with SessionLocal() as session:
             query = session.query(Food).filter(Food.id == id, Food.is_deleted == False)
             if preload_servings:
@@ -133,7 +132,7 @@ class FoodRepository:
             return results
         
     @staticmethod
-    def find_many_by_ids(ids: list[uuid.UUID]) -> list[Food]:
+    def find_many_by_ids(ids: list[int]) -> list[Food]:
         with SessionLocal() as session:
             return (
                 session.query(Food)

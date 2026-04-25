@@ -1,4 +1,4 @@
-from langchain.tools import tool
+from langchain.tools import ToolRuntime, tool
 from langchain.messages import AnyMessage, SystemMessage, ToolMessage
 from typing_extensions import TypedDict, Annotated
 from typing import List, Optional, Literal
@@ -6,6 +6,8 @@ import operator
 from langchain_groq import ChatGroq
 
 from langgraph.graph import StateGraph, START, END
+
+from dataclasses import dataclass
 
 from app.services.user_service import UserService
 from app.repositories.food_repository import FoodRepository
@@ -18,6 +20,19 @@ from app.services.user_service import UserService
 from app.constants.food_log import MealType
 from app.config import Config
 
+# ================================
+# STATE
+# ================================
+
+class MessagesState(TypedDict):
+    messages: Annotated[list[AnyMessage], operator.add]
+    llm_calls: int
+
+@dataclass
+class Context:
+    user_id: str
+
+
 
 # ================================
 # TOOLS
@@ -26,14 +41,15 @@ from app.config import Config
 # Food log tools
 
 @tool
-def get_today_food_logs(user_id: str, meal_type: Optional[MealType]) -> str:
+def get_today_food_logs(meal_type: Optional[MealType], runtime: ToolRuntime[Context]) -> str:
     """
     Ambil daftar makanan yang dicatat hari ini
 
     Args:
-        user_id (str): ID pengguna, otomatis tersedia di sistem, JANGAN minta ke user
         meal_type (MealType): Jenis makanan (Breakfast, Lunch, Dinner, Snack), optional
     """
+
+    user_id = runtime.context.user_id
 
     logs = FoodLogService.get_today_logs(user_id, meal_type=meal_type)
 
@@ -54,14 +70,14 @@ def get_today_food_logs(user_id: str, meal_type: Optional[MealType]) -> str:
 
 
 @tool
-def delete_food_log(user_id: str, log_ids: list[str]) -> str:
+def delete_food_log(log_ids: list[str], runtime: ToolRuntime[Context]) -> str:
     """
     Hapus food log berdasarkan log_id
 
     Args:
-        user_id (str): ID pengguna, otomatis tersedia di sistem, JANGAN minta ke user
         log_ids (List[str]): Daftar ID log makanan, jangan minta ke user, dapatkan dari output get_today_food_logs
     """
+    user_id = runtime.context.user_id
     
     deleted_logs = FoodLogService.bulk_delete_food_logs(user_id, log_ids)
     user_summary = UserService.get_user_summary(user_id)
@@ -76,16 +92,16 @@ def delete_food_log(user_id: str, log_ids: list[str]) -> str:
 
 @tool
 def add_food_log(
-    user_id: str, 
-    logs: BulkAddFoodLogSchema
+    logs: BulkAddFoodLogSchema,
+    runtime: ToolRuntime[Context]
 ) -> str:
     """
     Tambah food log baru
 
     Args:
-        user_id (str): ID pengguna, otomatis tersedia di sistem, JANGAN minta ke user
         logs (BulkAddFoodLogSchema): Daftar log makanan yang akan ditambahkan, dapatkan dari output search_food dan get_food_servings
     """
+    user_id = runtime.context.user_id
 
     logged_foods = FoodLogService.bulk_add_food_logs(user_id, logs)
     user_summary = UserService.get_user_summary(user_id)
@@ -140,10 +156,13 @@ def get_food_servings(food_id: str) -> str:
 
 @tool 
 def update_user_profile(
-        user_id: str,
         data: UpdateUserProfileSchema, 
+        runtime: ToolRuntime[Context]
     ) -> str:
     """Update profil user, jika belum tahu datanya bisa ambil dari get_user_profile tool"""
+
+    user_id = runtime.context.user_id
+
     UserService.update_user_profile(user_id, data)
 
     user_summary = UserService.get_user_summary(user_id)
@@ -231,16 +250,6 @@ model_with_tools = model.bind_tools(tools)
 
 
 # ================================
-# STATE
-# ================================
-
-class MessagesState(TypedDict):
-    messages: Annotated[list[AnyMessage], operator.add]
-    user_id: str
-    llm_calls: int
-
-
-# ================================
 # LLM NODE
 # ================================
 
@@ -316,13 +325,7 @@ def tool_node(state: MessagesState):
 
     for tool_call in last_message.tool_calls:
         tool = tools_by_name[tool_call["name"]]
-
-        # inject user_id otomatis
-        args = tool_call["args"]
-        args["user_id"] = state["user_id"]
-
-        observation = tool.invoke(args)
-
+        observation = tool.invoke(tool_call["args"])
         results.append(
             ToolMessage(
                 content=str(observation),

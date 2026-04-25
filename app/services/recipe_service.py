@@ -1,4 +1,3 @@
-import uuid
 from werkzeug.exceptions import NotFound
 from app.repositories.recipe_repository import RecipeRepository
 from app.repositories.comment_repository import CommentRepository
@@ -48,7 +47,7 @@ class RecipeService:
         return results, pagination
 
     @staticmethod
-    def get_recipe_detail(recipe_id: uuid.UUID):
+    def get_recipe_detail(recipe_id: int):
         # Retrieve recipe detail by ID
         recipe = RecipeRepository.find_by_id(recipe_id)
         if not recipe:
