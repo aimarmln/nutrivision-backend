@@ -1,11 +1,15 @@
 import uuid
 from datetime import datetime
+from typing import TYPE_CHECKING
+from pgvector.sqlalchemy import Vector
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 from sqlalchemy import String, DateTime, Boolean, func
 from sqlalchemy import String, DateTime
 from sqlalchemy.dialects.postgresql import UUID, TSVECTOR
-from app.models.serving import Serving
 from app.database import Base
+
+if TYPE_CHECKING:
+    from app.models.serving import Serving
 
 class Food(Base):
     __tablename__ = "foods"
@@ -25,7 +29,9 @@ class Food(Base):
     search_vector: Mapped[str] = mapped_column(TSVECTOR, nullable=True) 
 
     # Relationships
-    servings: Mapped[list["Serving"]] = relationship("Serving", backref="food")
+    servings: Mapped[list["Serving"]] = relationship("Serving", back_populates="food")
+
+    embedding: Mapped[list[float] | None] = mapped_column(Vector(768), nullable=True, default=None)
 
     # Audit fields
     is_deleted: Mapped[bool] = mapped_column(

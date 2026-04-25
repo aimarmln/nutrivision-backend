@@ -8,8 +8,6 @@ from app.utils.responses import success_response
 
 comment_bp = Blueprint('comments', __name__, url_prefix='/api/comments')
 
-import time
-
 @comment_bp.route('/<comment_id>', methods=[HTTPMethod.DELETE])
 @jwt_required()
 @validate_uuid_params('comment_id')

@@ -15,6 +15,7 @@ from app.routes.food_routes import food_bp
 from app.routes.food_logs_routes import food_log_bp
 from app.routes.recipe_routes import recipe_bp
 from app.routes.comment_routes import comment_bp
+from app.routes.chat_routes import chat_bp
 
 from app.config import Config
 from app.extensions import jwt
@@ -53,6 +54,7 @@ def create_app():
     app.register_blueprint(food_log_bp)
     app.register_blueprint(recipe_bp)
     app.register_blueprint(comment_bp)
+    app.register_blueprint(chat_bp)
 
     # Register error handlers
     app.errorhandler(ValidationError)(handle_validation_error)

@@ -1,11 +1,13 @@
+from typing import Optional
 import uuid
 from datetime import datetime, timezone
 from werkzeug.exceptions import NotFound, BadRequest
+from app.constants.food_log import MealType
 from app.repositories.food_repository import FoodRepository
 from app.repositories.serving_repository import ServingRepository
 from app.repositories.food_log_repository import FoodLogRepository
 from app.models.food_log import FoodLog
-from app.schemas.food_log_schema import CreateFoodLogSchema, UpdateFoodLogSchema
+from app.schemas.food_log_schema import BulkUpdateFoodLogSchema, CreateFoodLogSchema, UpdateFoodLogSchema, BulkAddFoodLogSchema
 
 class FoodLogService:
     
@@ -134,7 +136,150 @@ class FoodLogService:
         food_log.deleted_at = datetime.now(timezone.utc)
 
         # Save changes
-        FoodLogRepository.save(food_log)
+        food = FoodLogRepository.save(food_log)
 
-        return
+        return food
     
+    # AI utilities
+    @staticmethod
+    def get_today_logs(user_id: uuid.UUID, meal_type: Optional[MealType]) -> list[FoodLog]:
+        logs =  FoodLogRepository.find_by_user_id_and_date(
+            user_id=user_id,
+            log_date=datetime.now().date(),
+            meal_type=meal_type,
+            preload_food=True,
+            preload_serving=True
+        )
+
+        return logs
+    
+    @staticmethod
+    def bulk_add_food_logs(user_id: uuid.UUID, data: BulkAddFoodLogSchema) -> list[FoodLog]:
+        logs = data.items
+
+        if not logs:
+            raise BadRequest("No data provided")
+
+        # Collect unique IDs
+        food_ids = list(set(item.food_id for item in logs))
+        serving_ids = list(set(item.serving_id for item in logs))
+
+        # Fetch in batch
+        foods = FoodRepository.find_many_by_ids(food_ids)
+        servings = ServingRepository.find_many_by_ids(serving_ids)
+
+        if len(foods) != len(food_ids):
+            raise NotFound("Some foods not found")
+
+        if len(servings) != len(serving_ids):
+            raise NotFound("Some servings not found")
+
+        food_map = {f.id: f for f in foods}
+        serving_map = {s.id: s for s in servings}
+
+        now = datetime.now(timezone.utc)
+
+        food_logs = []
+
+        for item in logs:
+            serving = serving_map[item.serving_id]
+
+            # Validate serving belongs to food
+            if serving.food_id != item.food_id:
+                raise BadRequest("Serving does not belong to the specified food")
+
+            food_log = FoodLog(
+                id=uuid.uuid4(),
+                user_id=user_id,
+                food_id=item.food_id,
+                serving_id=item.serving_id,
+                number_of_units=item.number_of_units,
+                meal_type=item.meal_type,
+                created_at=now,
+                updated_at=now,
+            )
+
+            food_logs.append(food_log)
+
+        # Bulk insert
+        FoodLogRepository.bulk_save(food_logs)
+
+        log_ids = [log.id for log in food_logs]
+
+        return FoodLogRepository.find_many_by_ids_and_user(
+            log_ids,
+            user_id,
+            preload_food=True,
+            preload_serving=True
+        )
+    
+    @staticmethod
+    def bulk_edit_food_logs(user_id: uuid.UUID, data: BulkUpdateFoodLogSchema):
+        updates = data.updates
+
+        # Get all log IDs from the updates
+        log_ids = [item.id for item in updates]
+
+        # Get all logs in a single query
+        logs = FoodLogRepository.find_many_by_ids_and_user(log_ids, user_id)
+
+        if len(logs) != len(log_ids):
+            raise NotFound("Some food logs not found")
+
+        logs_map = {log.id: log for log in logs}
+
+        # Get all unique serving IDs from the updates
+        serving_ids = list(set(item.serving_id for item in updates))
+
+        servings = ServingRepository.find_many_by_ids(serving_ids)
+        serving_map = {s.id: s for s in servings}
+
+        if len(servings) != len(serving_ids):
+            raise NotFound("Some servings not found")
+
+        now = datetime.now(timezone.utc)
+
+        updated_logs = []
+
+        for item in updates:
+            log = logs_map[item.id]
+            serving = serving_map[item.serving_id]
+
+            # Validate serving belongs to the same food as the log
+            if serving.food_id != log.food_id:
+                raise BadRequest("Serving does not belong to the food")
+
+            # Update
+            log.serving_id = item.serving_id
+            log.number_of_units = item.number_of_units
+            log.updated_at = now
+
+            updated_logs.append(log)
+
+        # Bulk update logs in a single transaction
+        FoodLogRepository.bulk_save(updated_logs)
+
+        return updated_logs
+    
+    @staticmethod
+    def bulk_delete_food_logs(user_id:uuid.UUID, log_ids: list[uuid.UUID]) -> list[FoodLog]:
+        if not log_ids:
+            raise BadRequest("No log IDs provided")
+
+        # Get all logs in a single query
+        logs = FoodLogRepository.find_many_by_ids_and_user(log_ids, user_id, preload_food=True, preload_serving=True)
+
+        if len(logs) != len(log_ids):
+            raise NotFound("Some food logs not found or not owned by user")
+
+        now = datetime.now(timezone.utc)
+
+        # Soft delete all logs
+        for log in logs:
+            log.is_deleted = True
+            log.deleted_at = now
+
+        # Bulk delete logs in a single transaction
+        FoodLogRepository.bulk_save(logs)
+
+        return logs

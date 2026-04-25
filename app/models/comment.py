@@ -19,13 +19,13 @@ class Comment(Base):
 
     user_id: Mapped[uuid.UUID] = mapped_column(
         UUID(as_uuid=True),
-        ForeignKey("users.id"),
+        ForeignKey("users.id", ondelete="CASCADE"),
         nullable=False
     )
 
     recipe_id: Mapped[uuid.UUID] = mapped_column(
         UUID(as_uuid=True),
-        ForeignKey("recipes.id"),
+        ForeignKey("recipes.id", ondelete="CASCADE"),
         nullable=False
     )
 

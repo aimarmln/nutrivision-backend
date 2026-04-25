@@ -1,9 +1,15 @@
 import uuid
 from datetime import datetime
-from sqlalchemy.orm import Mapped, mapped_column
+from typing import TYPE_CHECKING
+from pgvector.sqlalchemy import Vector
+from sqlalchemy.orm import Mapped, mapped_column, relationship
 from sqlalchemy import ForeignKey, String, Float,  Boolean, DateTime, func
 from sqlalchemy.dialects.postgresql import UUID
 from app.database import Base
+
+if TYPE_CHECKING:
+    from app.models.food import Food
+
 
 class Serving(Base):
     __tablename__ = 'servings'
@@ -32,6 +38,13 @@ class Serving(Base):
     sugar_g: Mapped[float] = mapped_column(Float, nullable=False)
     sodium_mg: Mapped[float] = mapped_column(Float, nullable=False)
     kalium_mg: Mapped[float] = mapped_column(Float, nullable=False)
+
+    food: Mapped["Food"] = relationship(
+        "Food",
+        back_populates="servings"
+    )
+
+    embedding: Mapped[list[float] | None] = mapped_column(Vector(768), nullable=True, default=None)
 
     is_default: Mapped[bool] = mapped_column(Boolean, nullable=False, default=False)
 

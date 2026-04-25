@@ -151,3 +151,38 @@ class FoodService:
             })
 
         return results
+    
+    @staticmethod
+    def handle_log(ai, session):
+
+        food_name = ai["entities"].get("food")
+        amount = ai["entities"].get("amount", 1)
+        unit = ai["entities"].get("unit", "gram")
+
+        # 1. resolve food
+        food = FoodRepository.find_by_name(food_name)
+
+        # 2. resolve serving (IMPORTANT LOGIC)
+        serving = ServingRepository.find_best_match(
+            food_id=food.id,
+            unit=unit
+        )
+
+        # 3. calculate nutrition
+        calories = serving.calories_kcal * amount
+
+        # 4. save food log
+        FoodLogRepository.create(
+            user_id=session.user_id,
+            session_id=session.id,
+            food_id=food.id,
+            serving_id=serving.id,
+            number_of_units=amount,
+            calories=calories
+        )
+
+        return f"✅ {food.name} {amount} {unit} berhasil dicatat"
+    
+    @staticmethod
+    def handle_edit(ai, session):
+        return "Edit food feature coming soon"

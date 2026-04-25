@@ -26,9 +26,7 @@ def upgrade() -> None:
         CREATE FUNCTION food_search_vector_update() RETURNS trigger AS $$
         BEGIN
           NEW.search_vector :=
-            setweight(to_tsvector('simple', coalesce(NEW.name, '')), 'A') ||
-            setweight(to_tsvector('simple', coalesce(NEW.category, '')), 'B') ||
-            setweight(to_tsvector('simple', coalesce(NEW.subcategory, '')), 'C');
+            to_tsvector('simple', coalesce(NEW.name, ''));
           RETURN NEW;
         END
         $$ LANGUAGE plpgsql;
@@ -47,9 +45,7 @@ def upgrade() -> None:
     op.execute("""
         UPDATE foods SET
             search_vector =
-                setweight(to_tsvector('simple', coalesce(name, '')), 'A') ||
-                setweight(to_tsvector('simple', coalesce(category, '')), 'B') ||
-                setweight(to_tsvector('simple', coalesce(subcategory, '')), 'C');
+                to_tsvector('simple', coalesce(name, ''));
     """)
 
     # Create GIN index
