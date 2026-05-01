@@ -2,7 +2,7 @@ from http import HTTPStatus, HTTPMethod
 from flask import Blueprint, request
 from flask_jwt_extended import get_jwt_identity, jwt_required
 from werkzeug.exceptions import BadRequest
-from app.agent.agent import AddFoodLogsInput
+from app.agent.tools import AddFoodLogsInput
 from app.services import FoodLogService
 from app.schemas.food_log_schema import CreateFoodLogSchema, UpdateFoodLogSchema
 from app.utils.responses import success_response

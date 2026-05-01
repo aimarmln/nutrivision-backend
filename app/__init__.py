@@ -21,7 +21,7 @@ from app.routes import (
 
 from app.config import Config
 from app.extensions import jwt
-from app.agent.agent import checkpointer_cm
+from app.agent.checkpoint import checkpointer_cm
 from app.utils.database import shutdown_session
 from app.utils.errors import (
     handle_expired_token,

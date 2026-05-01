@@ -40,7 +40,7 @@ class ChatService:
         results = [
             {
                 "session_id": s.session_id,
-                "last_activity_at": s.last_activity_at,
+                "last_activity_at": s.last_activity_at.isoformat(),
                 "last_user_message": s.last_user_message # Nullable
             }
             for s in chat_sessions

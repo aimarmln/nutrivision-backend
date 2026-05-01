@@ -2,8 +2,9 @@ from datetime import date
 from langchain.tools import ToolRuntime, tool
 from typing import List, Optional, Literal
 from pydantic import BaseModel, Field
-from app.services import UserService, FoodLogService
-from app.repositories import FoodRepository
+from app.services.user_service import UserService
+from app.services.food_log_service import FoodLogService
+from app.repositories.food_repository import FoodRepository
 from app.schemas.food_log_schema import BulkAddFoodLogItem, BulkUpdateFoodLogItem
 from app.schemas.user_schema import UpdateUserProfileSchema
 from app.constants.food_log import MealType
