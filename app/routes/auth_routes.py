@@ -1,7 +1,7 @@
 from http import HTTPStatus, HTTPMethod
 from flask import Blueprint, request
 from flask_jwt_extended import get_jwt_identity, jwt_required
-from app.services.auth_service import AuthService
+from app.services import AuthService
 from app.schemas.auth_schema import RegisterSchema, LoginSchema, CheckEmailSchema
 from app.utils.responses import success_response
 

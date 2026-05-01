@@ -2,7 +2,7 @@ from http import HTTPMethod
 from flask import Blueprint, request
 from flask_jwt_extended import jwt_required
 from werkzeug.exceptions import BadRequest
-from app.services.food_service import FoodService
+from app.services import FoodService
 from app.schemas.food_schema import FoodsListQueryParams
 from app.utils.responses import success_response
 from app.utils.validation import validate_image_upload

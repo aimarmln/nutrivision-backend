@@ -9,17 +9,20 @@ from werkzeug.exceptions import (
 )
 from pydantic import ValidationError
 
-from app.routes.auth_routes import auth_bp
-from app.routes.user_routes import user_bp
-from app.routes.food_routes import food_bp
-from app.routes.food_logs_routes import food_log_bp
-from app.routes.recipe_routes import recipe_bp
-from app.routes.comment_routes import comment_bp
-from app.routes.chat_routes import chat_bp
+from app.routes import (
+    auth_bp,
+    user_bp,
+    food_bp,
+    food_log_bp,
+    recipe_bp,
+    comment_bp,
+    chat_bp
+)
 
 from app.config import Config
 from app.extensions import jwt
-
+from app.agent.agent import checkpointer_cm
+from app.utils.database import shutdown_session
 from app.utils.errors import (
     handle_expired_token,
     handle_invalid_token,
@@ -32,6 +35,8 @@ from app.utils.errors import (
     handle_conflict,
     handle_unauthorized
 )
+
+import atexit
 
 def create_app():
     # Initialize Flask app
@@ -65,5 +70,10 @@ def create_app():
     app.errorhandler(Unauthorized)(handle_unauthorized)
     app.errorhandler(InternalServerError)(handle_internal_error)
     app.errorhandler(Exception)(handle_internal_error)
+
+    # Ensure database sessions are removed after each request
+    app.teardown_appcontext(shutdown_session)
+
+    atexit.register(lambda: checkpointer_cm.__exit__(None, None, None))
 
     return app

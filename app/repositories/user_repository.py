@@ -1,30 +1,26 @@
-from app.database import SessionLocal
-from app.models.user import User
+from app.database import db_session
+from app.models import User
+
 
 class UserRepository:
     
     @staticmethod
     def find_by_id(id: int) -> User | None:
-        with SessionLocal() as session:
-            return (
-                session.query(User)
-                .filter(User.id == id, User.is_deleted == False)
-                .first()
-            )
-        
+        query = db_session.query(User).filter(
+            User.id == id, User.is_deleted == False
+        )
+
+        return query.first()
+    
     @staticmethod
     def find_by_email(email: str) -> User | None:
-        with SessionLocal() as session:
-            return (
-                session.query(User)
-                .filter(User.email == email, User.is_deleted == False)
-                .first()
-            )
+        query =  db_session.query(User).filter(
+            User.email == email, User.is_deleted == False
+        )
+
+        return query.first()
 
     @staticmethod
-    def save(user: User) -> User:
-        with SessionLocal() as session:
-            session.add(user)
-            session.commit()
-            session.refresh(user)
-            return user
+    def save(user: User):
+        db_session.add(user)
+        db_session.flush()

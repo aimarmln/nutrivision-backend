@@ -1,6 +1,5 @@
 from werkzeug.exceptions import NotFound
-from app.repositories.recipe_repository import RecipeRepository
-from app.repositories.comment_repository import CommentRepository
+from app.repositories import RecipeRepository, CommentRepository
 from app.schemas.recipe_schema import RecipesListQueryParams
 from app.utils.recipe import get_ingredients_list, get_instructions_list
 

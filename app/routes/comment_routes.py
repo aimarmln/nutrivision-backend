@@ -3,7 +3,7 @@ from http import HTTPStatus, HTTPMethod
 from flask import Blueprint
 from flask_jwt_extended import get_jwt_identity, jwt_required
 from werkzeug.exceptions import BadRequest
-from app.services.comment_service import CommentService
+from app.services import CommentService
 from app.utils.responses import success_response
 
 comment_bp = Blueprint('comments', __name__, url_prefix='/api/comments')

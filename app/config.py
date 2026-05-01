@@ -7,6 +7,7 @@ load_dotenv()  # Load environment variables from .env file
 class Config:
     SECRET_KEY = os.environ.get('SECRET_KEY', 'super-secret-key')
     DATABASE_URL = os.environ.get('DATABASE_URL', 'sqlite:///app.db')
+    CHECKPOINT_DB_URL = os.environ.get('CHECKPOINT_DB_URL', 'sqlite:///checkpoints.db')
 
     JWT_SECRET_KEY = os.environ.get('JWT_SECRET_KEY', 'super-secret-jwt-key')
     JWT_ACCESS_TOKEN_EXPIRES = timedelta(

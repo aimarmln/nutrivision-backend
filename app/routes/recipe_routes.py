@@ -2,8 +2,7 @@ from http import HTTPStatus, HTTPMethod
 from flask import Blueprint, request
 from flask_jwt_extended import get_jwt_identity, jwt_required
 from werkzeug.exceptions import BadRequest
-from app.services.recipe_service import RecipeService
-from app.services.comment_service import CommentService
+from app.services import RecipeService, CommentService
 from app.schemas.recipe_comment_schema import CommentsListQueryParams, CreateRecipeCommentSchema
 from app.schemas.recipe_schema import RecipesListQueryParams
 from app.utils.responses import success_response

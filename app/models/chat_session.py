@@ -13,7 +13,8 @@ class ChatSession(Base):
     id: Mapped[int] = mapped_column(
         Integer,
         primary_key=True,
-        autoincrement=True
+        autoincrement=True,
+        init=False
     )
 
     user_id: Mapped[int] = mapped_column(
@@ -22,14 +23,13 @@ class ChatSession(Base):
         nullable=False
     )
 
-    # ✅ RELATIONSHIP (harus sebelum default)
     messages: Mapped[list["ChatMessage"]] = relationship(
         "ChatMessage",
         back_populates="session",
-        cascade="all, delete-orphan"
+        cascade="all, delete-orphan",
+        init=False
     )
 
-    # ✅ DEFAULT
     last_activity_at: Mapped[datetime] = mapped_column(
         DateTime,
         nullable=False,
@@ -50,11 +50,11 @@ class ChatSession(Base):
         default=False
     )
 
-    title: Mapped[str | None] = mapped_column(
-        String(150),
-        nullable=True,
-        default=None
-    )
+    # title: Mapped[str | None] = mapped_column(
+    #     String(150),
+    #     nullable=True,
+    #     default=None
+    # )
 
     updated_at: Mapped[datetime | None] = mapped_column(
         DateTime,

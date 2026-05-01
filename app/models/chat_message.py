@@ -13,11 +13,11 @@ if TYPE_CHECKING:
 class ChatMessage(Base):
     __tablename__ = "chat_messages"
 
-    # ✅ REQUIRED
     id: Mapped[int] = mapped_column(
         Integer,
         primary_key=True,
-        autoincrement=True
+        autoincrement=True,
+        init=False
     )
 
     session_id: Mapped[int] = mapped_column(
@@ -43,13 +43,8 @@ class ChatMessage(Base):
         default=None
     )
 
-    intent: Mapped[str | None] = mapped_column(
-        String(50),
-        nullable=True,
-        default=None
-    )
-
     session: Mapped["ChatSession"] = relationship(
         "ChatSession",
-        back_populates="messages"
+        back_populates="messages",
+        init=False
     )

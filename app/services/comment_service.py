@@ -1,10 +1,10 @@
 from datetime import datetime, timezone
 from werkzeug.exceptions import NotFound
 from app.extensions import sentiment_analyzer
-from app.models.comment import Comment
-from app.repositories.recipe_repository import RecipeRepository
-from app.repositories.comment_repository import CommentRepository
+from app.models import Comment
+from app.repositories import RecipeRepository, CommentRepository
 from app.schemas.recipe_comment_schema import CommentsListQueryParams, CreateRecipeCommentSchema
+from app.utils.database import db_commit
 
 class CommentService:
 
@@ -27,16 +27,17 @@ class CommentService:
         )
         
         # Save the comment
-        saved_comment = CommentRepository.save(new_comment)
+        CommentRepository.save(new_comment)
+        db_commit()
 
         return {
-            "id": saved_comment.id,
-            "recipe_id": saved_comment.recipe_id,
-            "user_id": saved_comment.user_id,
-            "user_name": saved_comment.user.name,
-            "comment": saved_comment.text,
-            "sentiment": saved_comment.sentiment,
-            "created_at": saved_comment.created_at.isoformat()
+            "id": new_comment.id,
+            "recipe_id": new_comment.recipe_id,
+            "user_id": new_comment.user_id,
+            "user_name": new_comment.user.name,
+            "comment": new_comment.text,
+            "sentiment": new_comment.sentiment,
+            "created_at": new_comment.created_at.isoformat()
         }
     
     @staticmethod
@@ -65,7 +66,7 @@ class CommentService:
             last = comments[-1]
             next_cursor = {
                 "created_at": last.created_at.isoformat(),
-                "id": str(last.id)
+                "id": last.id
             }
 
         has_more = len(comments) == params.limit
@@ -91,6 +92,7 @@ class CommentService:
         comment.deleted_at = datetime.now(timezone.utc)
 
         CommentRepository.save(comment)
+        db_commit()
 
         return
     

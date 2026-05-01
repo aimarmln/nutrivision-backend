@@ -1,9 +1,8 @@
-import time
 from http import HTTPStatus, HTTPMethod
 from flask import Blueprint, request
 from flask_jwt_extended import get_jwt_identity, jwt_required
 from app.services.user_service import UserService
-from app.schemas.user_schema import CompleteUserProfileSchema, UpdateUserProfileSchema
+from app.schemas.user_schema import UpdateUserProfileSchema
 from app.utils.responses import success_response
 
 user_bp = Blueprint('user', __name__, url_prefix='/api/user')

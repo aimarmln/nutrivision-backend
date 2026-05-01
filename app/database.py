@@ -1,5 +1,5 @@
 from sqlalchemy import create_engine
-from sqlalchemy.orm import sessionmaker, MappedAsDataclass, DeclarativeBase
+from sqlalchemy.orm import sessionmaker,scoped_session, MappedAsDataclass, DeclarativeBase
 from app.config import Config
 
 # Base class for all models
@@ -19,3 +19,7 @@ SessionLocal = sessionmaker(
     autocommit=False,
     expire_on_commit=False
 )
+
+
+# Scoped session: 1 session per request
+db_session = scoped_session(SessionLocal)

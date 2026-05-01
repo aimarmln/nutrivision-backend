@@ -1,9 +1,10 @@
 from werkzeug.exceptions import Conflict, Unauthorized, NotFound
 from werkzeug.security import generate_password_hash, check_password_hash
 from flask_jwt_extended import create_access_token, create_refresh_token
-from app.models.user import User
-from app.repositories.user_repository import UserRepository
+from app.models import User
+from app.repositories import UserRepository
 from app.schemas.auth_schema import CheckEmailSchema, RegisterSchema, LoginSchema
+from app.utils.database import db_commit
 from app.utils.user import (
     calculate_age, 
     calculate_bmi, 
@@ -12,6 +13,7 @@ from app.utils.user import (
     calculate_calories_per_day, 
     calculate_macronutrients
 )
+
 
 class AuthService:
 
@@ -56,20 +58,22 @@ class AuthService:
         )
 
         # Save to DB
-        saved_user = UserRepository.save(user)
+        UserRepository.save(user)
+
+        db_commit()
 
         # Generate JWT tokens
-        access_token = create_access_token(identity=str(saved_user.id))
-        refresh_token = create_refresh_token(identity=str(saved_user.id))
+        access_token = create_access_token(identity=str(user.id))
+        refresh_token = create_refresh_token(identity=str(user.id))
 
         return {
             'user': {
-                'id': str(saved_user.id),
-                'name': saved_user.name,
-                'calories_per_day': saved_user.calories_per_day_kcal,
-                'proteins_per_day': saved_user.proteins_per_day_g,
-                'carbs_per_day': saved_user.carbohydrates_per_day_g,
-                'fats_per_day': saved_user.fats_per_day_g,
+                'id': user.id,
+                'name': user.name,
+                'calories_per_day': user.calories_per_day_kcal,
+                'proteins_per_day': user.proteins_per_day_g,
+                'carbs_per_day': user.carbohydrates_per_day_g,
+                'fats_per_day': user.fats_per_day_g,
             },
             'access_token': access_token,
             'refresh_token': refresh_token
@@ -92,7 +96,7 @@ class AuthService:
 
         return {
             'user': {
-                'id': str(user.id),
+                'id': user.id,
                 'name': user.name,
             },
             'access_token': access_token,

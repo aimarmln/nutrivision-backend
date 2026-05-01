@@ -46,8 +46,8 @@ def upgrade() -> None:
             nullable=False
         ),
 
-        # AI generated title for the session, can be null for ongoing sessions without a title yet
-        sa.Column("title", sa.String(150), nullable=True),
+        # # AI generated title for the session, can be null for ongoing sessions without a title yet
+        # sa.Column("title", sa.String(150), nullable=True),
 
         sa.Column(
             "last_activity_at",
@@ -84,9 +84,6 @@ def upgrade() -> None:
         sa.Column("role", postgresql.ENUM("User", "Assistant", name="chat_message_role_enum", create_type=False), nullable=False),
 
         sa.Column("message", sa.Text, nullable=False),
-
-        # optional metadata for agentic flow
-        sa.Column("intent", sa.String(50), nullable=True),  # log_food, query, edit, delete
 
         sa.Column(
             "created_at",
@@ -126,9 +123,16 @@ def upgrade() -> None:
         ["created_at"]
     )
 
+    op.create_index(
+        "idx_chat_messages_session_role_created",
+        "chat_messages",
+        ["session_id", "role", "created_at"]
+    )
+
 
 def downgrade() -> None:
     # drop indexes
+    op.drop_index("idx_chat_messages_session_role_created", table_name="chat_messages")
     op.drop_index("idx_chat_messages_created_at", table_name="chat_messages")
     op.drop_index("idx_chat_messages_session", table_name="chat_messages")
 

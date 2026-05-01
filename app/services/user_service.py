@@ -1,11 +1,11 @@
 from werkzeug.exceptions import NotFound, InternalServerError
 from collections import defaultdict
 from datetime import date, datetime, timezone
-from app.repositories.user_repository import UserRepository
-from app.repositories.food_log_repository import FoodLogRepository
-from app.models.user import User
+from app.repositories import UserRepository, FoodLogRepository
+from app.models import User
 from app.constants.food_log import MealType
 from app.schemas.user_schema import CompleteUserProfileSchema, UpdateUserProfileSchema
+from app.utils.database import db_commit
 from app.utils.user import (
     calculate_age, 
     calculate_bmi, 
@@ -67,13 +67,13 @@ class UserService:
             'user_summary': {
                 'name': user.name,
                 'calories_per_day': user.calories_per_day_kcal,
-                'carbohydrates_per_day': user.carbohydrates_per_day_g,
-                'calories_left': user.calories_per_day_kcal - round(total_calories),
-                'proteins_per_day': user.proteins_per_day_g,
-                'fats_per_day': user.fats_per_day_g,
                 'calories_eaten': round(total_calories),
+                'calories_left': user.calories_per_day_kcal - round(total_calories),
+                'carbohydrates_per_day': user.carbohydrates_per_day_g,
                 'carbohydrates_eaten': round(total_carbs, 1),
+                'proteins_per_day': user.proteins_per_day_g,
                 'proteins_eaten': round(total_proteins, 1),
+                'fats_per_day': user.fats_per_day_g,
                 'fats_eaten': round(total_fats, 1),
             },
             'food_logs': {
@@ -150,7 +150,8 @@ class UserService:
         UserService.calculate_user_metrics(user)
 
         # Save updated user to database
-        user = UserRepository.save(user)
+        UserRepository.save(user)
+        db_commit()
 
         return user
 
@@ -163,18 +164,14 @@ class UserService:
         
         # recalc flag
         recalc_required = False
-
-        # Basic fields
-        if data.email is not None:
-            user.email = data.email
-
+        
         if data.name is not None:
             user.name = data.name
 
         # Fields affecting calculations
-        if data.gender is not None:
-            user.gender = data.gender
-            recalc_required = True
+        # if data.gender is not None:
+        #     user.gender = data.gender
+        #     recalc_required = True
 
         if data.birthday is not None:
             birthday_date, age = calculate_age(data.birthday)
@@ -204,7 +201,8 @@ class UserService:
 
         user.updated_at = datetime.now(timezone.utc)
 
-        user = UserRepository.save(user)
+        UserRepository.save(user)
+        db_commit()
 
         return {
             'id': user.id,

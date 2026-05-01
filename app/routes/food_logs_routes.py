@@ -2,7 +2,8 @@ from http import HTTPStatus, HTTPMethod
 from flask import Blueprint, request
 from flask_jwt_extended import get_jwt_identity, jwt_required
 from werkzeug.exceptions import BadRequest
-from app.services.food_log_service import FoodLogService
+from app.agent.agent import AddFoodLogsInput
+from app.services import FoodLogService
 from app.schemas.food_log_schema import CreateFoodLogSchema, UpdateFoodLogSchema
 from app.utils.responses import success_response
 
@@ -85,4 +86,36 @@ def delete_food_log(food_log_id: int):
     return success_response(
         message='Food log deleted successfully',
         status_code=HTTPStatus.OK
+    )
+
+@food_log_bp.route('/bulk', methods=[HTTPMethod.POST])
+@jwt_required()
+def bulk_add_food_logs():
+    # Get user ID from JWT
+    user_id = int(get_jwt_identity())
+
+    # Validate request body
+    raw_data = request.get_json()
+    validated_data = AddFoodLogsInput(**raw_data)
+    
+    # Call service to create food log
+    result = FoodLogService.bulk_add_food_logs(user_id, validated_data.logs)
+
+    added_foods = [
+        {
+            "log_id": log.id,
+            "food_id": log.food_id,
+            "food_name": log.food.name,
+            "meal_type": log.meal_type.value,
+            "number_of_units": log.number_of_units,
+            "serving_unit": log.serving.serving_unit,
+            "calories": round(log.serving.calories_kcal * (log.number_of_units / log.serving.number_of_units)),
+        }
+        for log in result
+    ]
+
+    return success_response(
+        data=added_foods,
+        message='Food logs created successfully',
+        status_code=HTTPStatus.CREATED
     )
