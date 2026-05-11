@@ -11,7 +11,6 @@ KEEP_TURNS = 8
 def keep_user_and_last_ai_message(state: AgentState, runtime: Runtime) -> dict[str, Any] | None:
     messages = state["messages"]
     
-    # Kelompokkan pesan per turn berdasarkan HumanMessage
     turns = []
     current_turn = []
     
@@ -36,7 +35,7 @@ def keep_user_and_last_ai_message(state: AgentState, runtime: Runtime) -> dict[s
         if ai_msgs:
             trimmed.append(ai_msgs[-1])
 
-    # Kalau hasil trim sama dengan messages sekarang, skip (tidak ada perubahan)
+
     trimmed_ids = [m.id for m in trimmed]
     current_ids = [m.id for m in messages]
     if trimmed_ids == current_ids:
