@@ -83,18 +83,34 @@ def get_chat(session_id: int):
         status_code=HTTPStatus.OK
     )
 
-# @chat_bp.route("/foods-embeddings", methods=["POST"])
-# def foods_embeddings():
-#     raw_data = request.get_json()
-#     data = ChatSchema(**raw_data)
+@chat_bp.route("/<int:session_id>", methods=["DELETE"])
+@jwt_required()
+def delete_chat_session(session_id: int):
+    if session_id <= 0:
+        return BadRequest('Invalid session ID. Must be a positive integer.')
 
-#     foods = ChatService.get_foods_by_name(data.message)
+    user_id = int(get_jwt_identity())
 
-#     return success_response(
-#         data=foods,
-#         message='Chat processed successfully',
-#         status_code=HTTPStatus.OK
-#     )
+    ChatService.delete_session(user_id, session_id)
+
+    return success_response(
+        data=None,
+        message='Chat session deleted successfully',
+        status_code=HTTPStatus.OK
+    )
+
+@chat_bp.route("/foods-embeddings", methods=["POST"])
+def foods_embeddings():
+    raw_data = request.get_json()
+    data = ChatSchema(**raw_data)
+
+    foods = ChatService.get_foods_by_name(data.message)
+
+    return success_response(
+        data=foods,
+        message='Chat processed successfully',
+        status_code=HTTPStatus.OK
+    )
 
 
 # @chat_bp.route("/servings-embeddings", methods=["POST"])

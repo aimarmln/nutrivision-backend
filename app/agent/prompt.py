@@ -61,6 +61,11 @@ OUTPUT:
 - Jika ada summary, tampilkan ringkas dan insight singkat
 - Jawaban natural
 
+OUTPUT FORMAT:
+- JANGAN gunakan tabel markdown dalam kondisi apapun
+- JANGAN gunakan format pipe table (|---|)
+- Gunakan bullet list atau paragraf biasa
+
 Prioritas: akurat
 """
 )

@@ -3,7 +3,7 @@ from langchain.messages import HumanMessage
 from werkzeug.exceptions import NotFound
 from app.agent import agent, Context
 from app.models import ChatSession, ChatMessage
-from app.repositories import ChatRepository
+from app.repositories import ChatRepository, FoodRepository
 from app.constants.chat import ChatMessageRole
 from app.schemas.chat_schema import SessionsListQueryParams, ChatMessagesQueryParams
 from app.utils.database import db_commit
@@ -97,6 +97,16 @@ class ChatService:
         }
     
     @staticmethod
+    def delete_session(user_id: int, session_id: int):
+        session = ChatRepository.find_session_by_id(session_id)
+
+        if not session or session.user_id != user_id:
+            raise NotFound("Chat session not found")
+        
+        session.is_deleted = True
+        db_commit()
+    
+    @staticmethod
     def _process_message(user_id: int, chat_session: ChatSession, message: str):
         user_message = ChatMessage(
             session_id=chat_session.id,
@@ -150,30 +160,30 @@ class ChatService:
 
         return result["messages"][-1].content
         
-    # @staticmethod
-    # def get_foods_by_name(name: str) -> list[dict]:
-    #     raw_results = FoodRepository.get_foods_by_name(name)
+    @staticmethod
+    def get_foods_by_name(name: str) -> list[dict]:
+        raw_results = FoodRepository.get_foods_by_name(name, k=10)
 
-    #     results = []
-    #     for f, dist in raw_results:
-    #         similarity_score = round((1 - dist) * 100, 2) 
+        results = []
+        for f, dist in raw_results:
+            similarity_score = round((1 - dist) * 100, 2) 
 
-    #         results.append({
-    #             "id": str(f.id),
-    #             "name": f.name,
-    #             "category": f.category,
-    #             "distance": round(dist, 4),   
-    #             "score_percentage": f"{similarity_score}%", 
-    #             "servings": [
-    #                 {
-    #                     "unit": s.serving_unit,
-    #                     "calories": s.calories_kcal,
-    #                     "is_default": s.is_default
-    #                 } for s in f.servings
-    #             ]
-    #         })
+            results.append({
+                "id": str(f.id),
+                "name": f.name,
+                "category": f.category,
+                "distance": round(dist, 4),   
+                "score_percentage": f"{similarity_score}%", 
+                "servings": [
+                    {
+                        "unit": s.serving_unit,
+                        "calories": s.calories_kcal,
+                        "is_default": s.is_default
+                    } for s in f.servings
+                ]
+            })
 
-    #     return results
+        return results
     
     # @staticmethod
     # def get_food_servings(food_id: str, serving: str) -> list[dict]:
