@@ -6,6 +6,7 @@ from app.database import db_session
 from app.models import Food, FoodLog, Serving
 from app.constants.food_log import MealType
 
+
 class FoodLogRepository:
 
     @staticmethod
@@ -20,12 +21,12 @@ class FoodLogRepository:
         preload_user: bool = False,
         preload_food: bool = False,
         preload_serving: bool = False,
-        preload_food_servings: bool = False
+        preload_food_servings: bool = False,
     ) -> FoodLog | None:
         query = db_session.query(FoodLog).filter(
             FoodLog.id == food_log_id,
             FoodLog.user_id == user_id,
-            FoodLog.is_deleted == False
+            FoodLog.is_deleted == False,
         )
 
         # Conditional eager load
@@ -34,7 +35,9 @@ class FoodLogRepository:
         if preload_food:
             if preload_food_servings:
                 # preload food + all its servings
-                query = query.options(joinedload(FoodLog.food).joinedload(Food.servings))
+                query = query.options(
+                    joinedload(FoodLog.food).joinedload(Food.servings)
+                )
             else:
                 query = query.options(joinedload(FoodLog.food))
         if preload_serving:
@@ -49,17 +52,16 @@ class FoodLogRepository:
         meal_types: Optional[List[MealType]] = None,
         preload_food: bool = False,
         preload_serving: bool = False,
-        preload_food_servings: bool = False
+        preload_food_servings: bool = False,
     ) -> List[FoodLog]:
-        tz = ZoneInfo("Asia/Jakarta")  # UTC+7
-        start_datetime = datetime.combine(log_date, time.min, tzinfo=tz)
-        end_datetime = datetime.combine(log_date, time.max, tzinfo=tz)
+        start_datetime = datetime.combine(log_date, time.min)
+        end_datetime = datetime.combine(log_date, time.max)
 
         query = db_session.query(FoodLog).filter(
             FoodLog.user_id == user_id,
             FoodLog.created_at >= start_datetime,
             FoodLog.created_at <= end_datetime,
-            FoodLog.is_deleted == False
+            FoodLog.is_deleted == False,
         )
 
         # Conditional eager load
@@ -67,14 +69,16 @@ class FoodLogRepository:
             query = query.filter(FoodLog.meal_type.in_(meal_types))
         if preload_food:
             if preload_food_servings:
-                query = query.options(joinedload(FoodLog.food).joinedload(Food.servings))
+                query = query.options(
+                    joinedload(FoodLog.food).joinedload(Food.servings)
+                )
             else:
                 query = query.options(joinedload(FoodLog.food))
         if preload_serving:
             query = query.options(joinedload(FoodLog.serving))
 
         return query.all()
-        
+
     # AI utilities
     @staticmethod
     def bulk_insert(logs: list[FoodLog]):
@@ -92,26 +96,26 @@ class FoodLogRepository:
         user_id: int,
         preload_food: bool = False,
         preload_serving: bool = False,
-        preload_food_servings: bool = False
+        preload_food_servings: bool = False,
     ) -> List[FoodLog]:
         query = db_session.query(FoodLog).filter(
             FoodLog.id.in_(log_ids),
             FoodLog.user_id == user_id,
-            FoodLog.is_deleted == False
+            FoodLog.is_deleted == False,
         )
 
         # Conditional eager load
         if preload_food:
             if preload_food_servings:
                 query = query.options(
-                    joinedload(FoodLog.food).load_only(
-                        Food.id, 
-                        Food.name
-                    ).joinedload(Food.servings).load_only(
-                        Serving.id, 
-                        Serving.calories_kcal, 
-                        Serving.number_of_units, 
-                        Serving.serving_unit
+                    joinedload(FoodLog.food)
+                    .load_only(Food.id, Food.name)
+                    .joinedload(Food.servings)
+                    .load_only(
+                        Serving.id,
+                        Serving.calories_kcal,
+                        Serving.number_of_units,
+                        Serving.serving_unit,
                     )
                 )
             else:
@@ -121,13 +125,11 @@ class FoodLogRepository:
         if preload_serving:
             query = query.options(
                 joinedload(FoodLog.serving).load_only(
-                    Serving.id, 
-                    Serving.calories_kcal, 
-                    Serving.number_of_units, 
-                    Serving.serving_unit
+                    Serving.id,
+                    Serving.calories_kcal,
+                    Serving.number_of_units,
+                    Serving.serving_unit,
                 )
             )
-            
+
         return query.all()
-        
-    

@@ -1,7 +1,6 @@
 from langchain.messages import SystemMessage
 
-system_prompt = SystemMessage(
-    content="""
+system_prompt = SystemMessage(content="""
 Kamu adalah AI NutriVision dan hanya boleh bekerja sebagai asisten nutrisi.
 
 SCOPE:
@@ -67,33 +66,7 @@ OUTPUT FORMAT:
 - Gunakan bullet list atau paragraf biasa
 
 Prioritas: akurat
-"""
-)
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+""")
 
 
 # system_prompt = SystemMessage(

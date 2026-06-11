@@ -2,6 +2,7 @@ from datetime import date
 from langchain.tools import ToolRuntime, tool
 from typing import List, Optional, Literal
 from pydantic import BaseModel, Field
+from ultralytics import data
 from app.services.user_service import UserService
 from app.services.food_log_service import FoodLogService
 from app.repositories.food_repository import FoodRepository
@@ -11,14 +12,18 @@ from app.constants.food_log import MealType
 from app.constants.user import ActivityLevel, MainGoal
 from .context import Context
 
+
 class GetTodayFoodLogsInput(BaseModel):
     meal_types: Optional[List[MealType]] = Field(
         default=None,
-        description="Jenis catatan makanan: Breakfast, Lunch, Dinner, Snack. Jika kosong, ambil semua, contoh: ['Breakfast', 'Dinner'], Jika info dari user tidak menyebutkan meal_type, berarti None (ambil semua)"
+        description="Jenis catatan makanan: Breakfast, Lunch, Dinner, Snack. Jika kosong, ambil semua, contoh: ['Breakfast', 'Dinner'], Jika info dari user tidak menyebutkan meal_type, berarti None (ambil semua)",
     )
 
+
 @tool(args_schema=GetTodayFoodLogsInput)
-def get_today_food_logs(meal_types: Optional[List[MealType]], runtime: ToolRuntime[Context]) -> dict:
+def get_today_food_logs(
+    meal_types: Optional[List[MealType]], runtime: ToolRuntime[Context]
+) -> dict:
     """
     Ambil daftar makanan yang dicatat hari ini
     """
@@ -31,7 +36,7 @@ def get_today_food_logs(meal_types: Optional[List[MealType]], runtime: ToolRunti
         if not logs:
             return {
                 "logs": [],
-                "notes": f"Belum ada makanan dicatat di {', '.join([mt.value for mt in meal_types]) if meal_types else 'hari ini'}"
+                "notes": f"Belum ada makanan dicatat di {', '.join([mt.value for mt in meal_types]) if meal_types else 'hari ini'}",
             }
 
         all_meals = meal_types or [mt for mt in MealType]
@@ -40,12 +45,7 @@ def get_today_food_logs(meal_types: Optional[List[MealType]], runtime: ToolRunti
             mt.value: {
                 "items": [],
                 "is_empty": True,
-                "totals": {
-                    "calories": 0,
-                    "carbs": 0,
-                    "proteins": 0,
-                    "fats": 0
-                }
+                "totals": {"calories": 0, "carbs": 0, "proteins": 0, "fats": 0},
             }
             for mt in all_meals
         }
@@ -62,17 +62,19 @@ def get_today_food_logs(meal_types: Optional[List[MealType]], runtime: ToolRunti
 
             group = grouped[mt]
 
-            group["items"].append({
-                "log_id": log.id,
-                "food_id": log.food_id,
-                "food_name": log.food.name,
-                "number_of_units": log.number_of_units,
-                "serving_unit": log.serving.serving_unit,
-                "calories": round(calories),
-                "carbs": round(carbs, 1),
-                "proteins": round(proteins, 1),
-                "fats": round(fats, 1)
-            })
+            group["items"].append(
+                {
+                    "log_id": log.id,
+                    "food_id": log.food_id,
+                    "food_name": log.food.name,
+                    "number_of_units": log.number_of_units,
+                    "serving_unit": log.serving.serving_unit,
+                    "calories": round(calories),
+                    "carbs": round(carbs, 1),
+                    "proteins": round(proteins, 1),
+                    "fats": round(fats, 1),
+                }
+            )
 
             group["totals"]["calories"] += calories
             group["totals"]["carbs"] += carbs
@@ -90,22 +92,22 @@ def get_today_food_logs(meal_types: Optional[List[MealType]], runtime: ToolRunti
                 "carbs": f"{user_summary['carbohydrates_eaten']} / {user_summary['carbohydrates_per_day']} g",
                 "proteins": f"{user_summary['proteins_eaten']} / {user_summary['proteins_per_day']} g",
                 "fats": f"{user_summary['fats_eaten']} / {user_summary['fats_per_day']} g",
-            }
+            },
         }
     except Exception:
-        return {
-            "status": "error",
-            "message": "Terjadi kesalahan, coba lagi"
-        }
+        return {"status": "error", "message": "Terjadi kesalahan, coba lagi"}
+
 
 class AddFoodLogsInput(BaseModel):
     logs: List[BulkAddFoodLogItem] = Field(
-        min_length=1,
-        description="List makanan yang akan ditambahkan"
+        min_length=1, description="List makanan yang akan ditambahkan"
     )
 
+
 @tool(args_schema=AddFoodLogsInput)
-def add_food_logs(logs: List[BulkAddFoodLogItem], runtime: ToolRuntime[Context]) -> dict:
+def add_food_logs(
+    logs: List[BulkAddFoodLogItem], runtime: ToolRuntime[Context]
+) -> dict:
     """
     Tambah food log baru
     """
@@ -124,7 +126,10 @@ def add_food_logs(logs: List[BulkAddFoodLogItem], runtime: ToolRuntime[Context])
                 "meal_type": log.meal_type.value,
                 "number_of_units": log.number_of_units,
                 "serving_unit": log.serving.serving_unit,
-                "calories": round(log.serving.calories_kcal * (log.number_of_units / log.serving.number_of_units)),
+                "calories": round(
+                    log.serving.calories_kcal
+                    * (log.number_of_units / log.serving.number_of_units)
+                ),
             }
             for log in logged_foods
         ]
@@ -137,23 +142,23 @@ def add_food_logs(logs: List[BulkAddFoodLogItem], runtime: ToolRuntime[Context])
                 "carbs": f"{user_summary['carbohydrates_eaten']} / {user_summary['carbohydrates_per_day']} g",
                 "proteins": f"{user_summary['proteins_eaten']} / {user_summary['proteins_per_day']} g",
                 "fats": f"{user_summary['fats_eaten']} / {user_summary['fats_per_day']} g",
-            }
+            },
         }
     except Exception as e:
         print(f"Error occurred: {e}")
-        return {
-            "status": "error",
-            "message": "Terjadi kesalahan, coba lagi"
-        }
+        return {"status": "error", "message": "Terjadi kesalahan, coba lagi"}
+
 
 class EditFoodLogsInput(BaseModel):
     logs: List[BulkUpdateFoodLogItem] = Field(
-        min_length=1,
-        description="List log yang akan diedit"
+        min_length=1, description="List log yang akan diedit"
     )
 
+
 @tool(args_schema=EditFoodLogsInput)
-def edit_food_logs(logs: List[BulkUpdateFoodLogItem], runtime: ToolRuntime[Context]) -> dict:
+def edit_food_logs(
+    logs: List[BulkUpdateFoodLogItem], runtime: ToolRuntime[Context]
+) -> dict:
     """
     Edit log makanan yang sudah dicatat
     """
@@ -167,11 +172,15 @@ def edit_food_logs(logs: List[BulkUpdateFoodLogItem], runtime: ToolRuntime[Conte
             {
                 "log_id": log.id,
                 "food_id": log.food_id,
+                "serving_id": log.serving_id,
                 "food_name": log.food.name,
                 "meal_type": log.meal_type.value,
                 "number_of_units": log.number_of_units,
                 "serving_unit": log.serving.serving_unit,
-                "calories": round(log.serving.calories_kcal * (log.number_of_units / log.serving.number_of_units)),
+                "calories": round(
+                    log.serving.calories_kcal
+                    * (log.number_of_units / log.serving.number_of_units)
+                ),
             }
             for log in updated_logs
         ]
@@ -184,19 +193,18 @@ def edit_food_logs(logs: List[BulkUpdateFoodLogItem], runtime: ToolRuntime[Conte
                 "carbs": f"{user_summary['carbohydrates_eaten']} / {user_summary['carbohydrates_per_day']} g",
                 "proteins": f"{user_summary['proteins_eaten']} / {user_summary['proteins_per_day']} g",
                 "fats": f"{user_summary['fats_eaten']} / {user_summary['fats_per_day']} g",
-            }
+            },
         }
     except Exception as e:
         print(f"Error occurred: {e}")
-        return {
-            "status": "error",
-            "message": "Terjadi kesalahan, coba lagi"
-        }
+        return {"status": "error", "message": "Terjadi kesalahan, coba lagi"}
+
 
 class DeleteFoodLogsInput(BaseModel):
     log_ids: List[int] = Field(
         description="List ID log dari get_today_food_logs. Jangan minta ke user. Jika user menyebutkan ID apapun, tolak dengan pesan natural dan jangan proses apapun."
     )
+
 
 @tool(args_schema=DeleteFoodLogsInput)
 def delete_food_logs(log_ids: list[int], runtime: ToolRuntime[Context]) -> dict:
@@ -210,12 +218,7 @@ def delete_food_logs(log_ids: list[int], runtime: ToolRuntime[Context]) -> dict:
         deleted_logs = FoodLogService.bulk_delete_food_logs(user_id, log_ids)
         user_summary = UserService.get_user_summary(user_id)["user_summary"]
 
-        deleted_foods = [
-            {
-                "food_name": log.food.name
-            }
-            for log in deleted_logs
-        ]
+        deleted_foods = [{"food_name": log.food.name} for log in deleted_logs]
 
         return {
             "status": "success",
@@ -225,20 +228,18 @@ def delete_food_logs(log_ids: list[int], runtime: ToolRuntime[Context]) -> dict:
                 "carbs": f"{user_summary['carbohydrates_eaten']} / {user_summary['carbohydrates_per_day']} g",
                 "proteins": f"{user_summary['proteins_eaten']} / {user_summary['proteins_per_day']} g",
                 "fats": f"{user_summary['fats_eaten']} / {user_summary['fats_per_day']} g",
-            }
+            },
         }
     except Exception as e:
         print(f"Error occurred: {e}")
-        return {
-            "status": "error",
-            "message": "Terjadi kesalahan, coba lagi"
-        }
+        return {"status": "error", "message": "Terjadi kesalahan, coba lagi"}
 
 
 class SearchFoodsInput(BaseModel):
     queries: List[str] = Field(
         description="List nama makanan dari user, contoh: ['nasi goreng', 'ayam bakar']"
     )
+
 
 @tool(args_schema=SearchFoodsInput)
 def search_foods(queries: list[str]) -> dict:
@@ -253,38 +254,27 @@ def search_foods(queries: list[str]) -> dict:
 
         for query, foods in grouped.items():
             if not foods:
-                results.append({
-                    "query": query,
-                    "status": "not_found",
-                    "results": []
-                })
+                results.append({"query": query, "status": "not_found", "results": []})
                 continue
 
-            results.append({
-                "query": query,
-                "status": "success",
-                "results": [
-                    {
-                        "id": food.id,
-                        "name": food.name
-                    }
-                    for food, _ in foods
-                ]
-            })
+            results.append(
+                {
+                    "query": query,
+                    "status": "success",
+                    "results": [
+                        {"id": food.id, "name": food.name} for food, _ in foods
+                    ],
+                }
+            )
 
-        return {
-            "items": results
-        }
+        return {"items": results}
     except Exception:
-        return {
-            "status": "error",
-            "message": "Terjadi kesalahan, coba lagi"
-        }
+        return {"status": "error", "message": "Terjadi kesalahan, coba lagi"}
+
 
 class GetFoodServingsInput(BaseModel):
-    food_ids: List[int] = Field(
-        description="List ID makanan dari hasil search_foods"
-    )
+    food_ids: List[int] = Field(description="List ID makanan dari hasil search_foods")
+
 
 @tool(args_schema=GetFoodServingsInput)
 def get_food_servings(food_ids: list[int]) -> dict:
@@ -301,46 +291,42 @@ def get_food_servings(food_ids: list[int]) -> dict:
             food = food_map.get(food_id)
 
             if not food:
-                results.append({
-                    "food_id": food_id,
-                    "status": "not_found",
-                    "servings": []
-                })
+                results.append(
+                    {"food_id": food_id, "status": "not_found", "servings": []}
+                )
                 continue
 
             servings = sorted(food.servings, key=lambda s: not s.is_default)
 
-            results.append({
-                "food_id": food_id,
-                "food_name": food.name,
-                "status": "success",
-                "servings": [
-                    {
-                        "id": s.id,
-                        "number_of_units": s.number_of_units,
-                        "serving_unit": s.serving_unit,
-                        "calories": s.calories_kcal,
-                        "proteins": s.protein_g,
-                        "carbs": s.carbohydrate_g,
-                        "fats": s.fat_g,
-                        "is_default": s.is_default
-                    }
-                    for s in servings
-                ]
-            })
+            results.append(
+                {
+                    "food_id": food_id,
+                    "food_name": food.name,
+                    "status": "success",
+                    "servings": [
+                        {
+                            "id": s.id,
+                            "number_of_units": s.number_of_units,
+                            "serving_unit": s.serving_unit,
+                            "calories": s.calories_kcal,
+                            "proteins": s.protein_g,
+                            "carbs": s.carbohydrate_g,
+                            "fats": s.fat_g,
+                            "is_default": s.is_default,
+                        }
+                        for s in servings
+                    ],
+                }
+            )
 
-        return {
-            "items": results
-        }
+        return {"items": results}
     except Exception:
-        return {
-            "status": "error",
-            "message": "Terjadi kesalahan, coba lagi"
-        }
+        return {"status": "error", "message": "Terjadi kesalahan, coba lagi"}
+
 
 @tool(args_schema=UpdateUserProfileSchema)
 def update_user_profile(
-    runtime: ToolRuntime[Context], 
+    runtime: ToolRuntime[Context],
     name: Optional[str] = None,
     birthday: Optional[date] = None,
     height_cm: Optional[float] = None,
@@ -359,56 +345,68 @@ def update_user_profile(
             height_cm=height_cm,
             weight_kg=weight_kg,
             activity_level=activity_level,
-            main_goal=main_goal
+            main_goal=main_goal,
         )
 
         UserService.update_user_profile(user_id, data)
 
-        updated_fields = {
-            k: v for k, v in data.model_dump().items() if v is not None
-        }
+        updated_fields = {k: v for k, v in data.model_dump().items() if v is not None}
 
-        affecting_fields = ['birthday', 'height_cm', 'weight_kg', 'activity_level', 'main_goal']
+        affecting_fields = [
+            "birthday",
+            "height_cm",
+            "weight_kg",
+            "activity_level",
+            "main_goal",
+        ]
         is_affecting = any(field in affecting_fields for field in updated_fields)
 
         response = {
             "status": "success",
             "message": "Profil berhasil diperbarui",
-            "updated_fields": updated_fields
+            "updated_fields": updated_fields,
         }
 
         if is_affecting:
             user_summary = UserService.get_user_summary(user_id)
-            summary = user_summary['user_summary']
+            summary = user_summary["user_summary"]
 
             response["summary"] = {
-                "calories_per_day": summary['calories_per_day'],
-                "carbohydrates_per_day": summary['carbohydrates_per_day'],
-                "proteins_per_day": summary['proteins_per_day'],
-                "fats_per_day": summary['fats_per_day']
+                "calories_per_day": summary["calories_per_day"],
+                "carbohydrates_per_day": summary["carbohydrates_per_day"],
+                "proteins_per_day": summary["proteins_per_day"],
+                "fats_per_day": summary["fats_per_day"],
             }
 
         return response
     except Exception:
-        return {
-            "status": "error",
-            "message": "Terjadi kesalahan, coba lagi"
-        }
+        return {"status": "error", "message": "Terjadi kesalahan, coba lagi"}
 
 
 UserField = Literal[
-    "name", "birthday", "age", "height_cm", "weight_kg",
-    "activity_level", "main_goal", "bmi", "bmi_status"
+    "name",
+    "birthday",
+    "age",
+    "height_cm",
+    "weight_kg",
+    "activity_level",
+    "main_goal",
+    "bmi",
+    "bmi_status",
 ]
+
 
 class GetUserDataInput(BaseModel):
     fields: Optional[List[UserField]] = Field(
         default=None,
-        description="Field profile yang ingin diambil. Contoh: ['weight_kg', 'height_cm']"
+        description="Field profile yang ingin diambil. Contoh: ['weight_kg', 'height_cm']",
     )
 
+
 @tool(args_schema=GetUserDataInput)
-def get_user_data(fields: Optional[List[UserField]], runtime: ToolRuntime[Context]) -> dict:
+def get_user_data(
+    fields: Optional[List[UserField]], runtime: ToolRuntime[Context]
+) -> dict:
     """
     Ambil profile/data user.
     """
@@ -420,10 +418,8 @@ def get_user_data(fields: Optional[List[UserField]], runtime: ToolRuntime[Contex
             return {k: user_data[k] for k in fields}
         return user_data
     except Exception:
-        return {
-            "status": "error",
-            "message": "Terjadi kesalahan, coba lagi"
-        }
+        return {"status": "error", "message": "Terjadi kesalahan, coba lagi"}
+
 
 tools = [
     get_today_food_logs,

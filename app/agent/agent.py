@@ -13,5 +13,5 @@ agent = create_agent(
     system_prompt=system_prompt,
     context_schema=Context,
     middleware=[keep_user_and_last_ai_message],
-    checkpointer=checkpointer
+    checkpointer=checkpointer,
 )
