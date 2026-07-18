@@ -6,5 +6,4 @@ model = ChatGroq(
     groq_api_key=Config.GROQ_API_KEY,
     temperature=0.3,
     reasoning_effort="low",
-    max_tokens=500,
 )

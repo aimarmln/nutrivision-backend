@@ -1,5 +1,0 @@
-[tool.black]
-line-length = 70 
-skip-string-normalization = true
-preview = true
-enable-unstable-feature = ["string_processing"]
