@@ -1,396 +1,133 @@
-# nutrivision-backend
+# NutriVision Backend
 
-Backend API untuk NutriVision berbasis Flask, SQLAlchemy, Alembic, JWT, dan integrasi model ML.
+NutriVision Backend adalah REST API yang dibangun menggunakan **Flask** untuk mendukung fungsionalitas aplikasi NutriVision. Aplikasi ini mengintegrasikan berbagai fitur seperti pelacakan makanan (food logging), manajemen resep, sistem *serving*, serta lapisan kecerdasan buatan (AI) yang mendukung analisis gambar makanan menggunakan *machine learning* (YOLO) dan chatbot pintar menggunakan arsitektur agen (LangGraph & Groq).
 
-## Project Structure
+## 🚀 Fitur Utama
+
+- **Otentikasi & Manajemen Pengguna**: Sistem registrasi, login, dan keamanan berbasis token menggunakan JWT (JSON Web Tokens).
+- **Manajemen Makanan & Resep**: CRUD data makanan, *serving*, dan resep masakan.
+- **Catatan Makanan (Food Logging)**: Mencatat asupan nutrisi dan makanan harian pengguna.
+- **Kecerdasan Buatan & Chatbot (AI Chat Intelligence)**: Fitur percakapan pintar untuk mencatat makanan secara otomatis melalui *natural language processing*. Didukung oleh LangGraph dan Groq API.
+- **Integrasi Machine Learning**:
+  - **YOLO Detector**: Untuk mendeteksi dan mengenali jenis makanan dari gambar.
+  - **Sentiment Analyzer**: Menganalisis sentimen terkait komentar resep atau feedback menggunakan model deep learning (TensorFlow/Keras).
+- **Caching & Manajemen Sesi**: Menggunakan Redis untuk optimasi sistem chat session dan timeout.
+
+## 🛠️ Teknologi & Library
+
+Proyek ini dibangun menggunakan pustaka modern Python, antara lain:
+
+- **Framework**: `Flask` (v3.1.1)
+- **Database & ORM**: `SQLAlchemy` (v2.0.35), `flask_sqlalchemy`
+- **Migrasi Database**: `Alembic`
+- **Keamanan**: `flask_jwt_extended`, `werkzeug`
+- **Data & Validasi**: `pydantic`, `pandas`
+- **Kecerdasan Buatan (AI/ML)**:
+  - `tensorflow` (v2.18.0) & `ultralytics` (YOLO) untuk Machine Learning / Computer Vision.
+  - LLM Integrations via LangChain, LangGraph, Groq, dan API Gemini.
+- **Pengolahan Gambar**: `Pillow`
+- **Utilitas**: `python-dotenv` untuk konfigurasi environment.
+
+## 📁 Struktur Proyek (Project Structure)
+
+Proyek ini dirancang dengan arsitektur berbasis *Repository & Service Layer* untuk menjaga *Clean Code* dan memisahkan tanggung jawab (Separation of Concerns).
 
 ```text
 .
-|-- .env
-|-- .gitignore
-|-- AGENTS.md
-|-- README.md
-|-- alembic.ini
-|-- main.py
-|-- requirements.txt
-|-- app/
-|   |-- __init__.py
-|   |-- config.py
-|   |-- database.py
-|   |-- extensions.py
-|   |-- constants/
-|   |   |-- __init__.py
-|   |   |-- chat.py
-|   |   |-- comment.py
-|   |   |-- food.py
-|   |   |-- food_log.py
-|   |   |-- recipe.py
-|   |   `-- user.py
-|   |-- middlewares/
-|   |   `-- uuid_middleware.py
-|   |-- ml/
-|   |   |-- __init__.py
-|   |   |-- sentiment_analyzer.py
-|   |   |-- yolo_detector.py
-|   |   |-- models/
-|   |   |   |-- food_detection_model.pt
-|   |   |   `-- sentiment_analysis_model.h5
-|   |   `-- tokenizers/
-|   |       `-- sentiment_tokenizer.pkl
-|   |-- models/
-|   |   |-- __init__.py
-|   |   |-- chat_message.py
-|   |   |-- chat_session.py
-|   |   |-- comment.py
-|   |   |-- food.py
-|   |   |-- food_log.py
-|   |   |-- recipe.py
-|   |   |-- serving.py
-|   |   `-- user.py
-|   |-- repositories/
-|   |   |-- comment_repository.py
-|   |   |-- food_log_repository.py
-|   |   |-- food_repository.py
-|   |   |-- recipe_repository.py
-|   |   |-- serving_repository.py
-|   |   `-- user_repository.py
-|   |-- routes/
-|   |   |-- __init__.py
-|   |   |-- auth_routes.py
-|   |   |-- comment_routes.py
-|   |   |-- food_logs_routes.py
-|   |   |-- food_routes.py
-|   |   |-- recipe_routes.py
-|   |   `-- user_routes.py
-|   |-- schemas/
-|   |   |-- auth_schema.py
-|   |   |-- food_log_schema.py
-|   |   |-- food_schema.py
-|   |   |-- recipe_comment_schema.py
-|   |   |-- recipe_schema.py
-|   |   `-- user_schema.py
-|   |-- services/
-|   |   |-- __init__.py
-|   |   |-- auth_service.py
-|   |   |-- comment_service.py
-|   |   |-- food_log_service.py
-|   |   |-- food_service.py
-|   |   |-- recipe_service.py
-|   |   `-- user_service.py
-|   `-- utils/
-|       |-- __init__.py
-|       |-- enum.py
-|       |-- errors.py
-|       |-- logger.py
-|       |-- recipe.py
-|       |-- responses.py
-|       |-- user.py
-|       `-- validation.py
-`-- migrations/
-	|-- README
-	|-- env.py
-	|-- script.py.mako
-	`-- versions/
-		|-- 083b78b306dd_create_initial_nutrivision_schema.py
-		|-- 0ceace46c2dd_add_full_text_search_to_foods.py
-		|-- 559733462727_add_servings_table_and_update_food_logs.py
-		`-- e8275cb76473_add_chat_session_messages.py
+├── .env.example          # Template environment variable
+├── alembic.ini           # Konfigurasi Alembic untuk migrasi database
+├── main.py               # Entry point untuk menjalankan aplikasi Flask
+├── requirements.txt      # Daftar dependensi package Python
+├── app/                  # Direktori utama aplikasi
+│   ├── __init__.py       # Inisialisasi app Flask (Application Factory)
+│   ├── config.py         # Konfigurasi aplikasi dari environment
+│   ├── database.py       # Setup koneksi database
+│   ├── extensions.py     # Inisialisasi ekstensi pihak ketiga (JWT, DB, dll.)
+│   ├── agent/            # State agent config dan LangGraph checkpointers
+│   ├── constants/        # Konstanta sistem (chat, food, user, dll.)
+│   ├── middlewares/      # Custom middleware Flask (mis. UUID middleware)
+│   ├── ml/               # Model Machine Learning & logika prediksi (YOLO, Sentiment)
+│   ├── models/           # Definisi schema/model database SQLAlchemy
+│   ├── repositories/     # Layer akses langsung ke database
+│   ├── routes/           # Blueprints/Controller Flask untuk API endpoints
+│   ├── schemas/          # Schema Pydantic untuk validasi input/output API
+│   ├── services/         # Layer business logic dari aplikasi
+│   └── utils/            # Fungsi bantuan, enumerasi, logger, dan error handler
+└── migrations/           # Skrip riwayat migrasi database Alembic
 ```
 
-## Notes
+## ⚙️ Persyaratan Sistem (Prerequisites)
 
-- Struktur di atas menampilkan file dan folder utama project.
-- Folder cache seperti `__pycache__/` dan metadata Git tidak ditampilkan agar dokumentasi tetap fokus.
+Sebelum menjalankan backend ini, pastikan sistem Anda telah memiliki:
 
-Mantap — struktur kamu ini **sudah level production backend yang serius** 👍
-Sekarang aku bantu kamu: **next step paling logis setelah chat_sessions + chat_messages sudah ada**
+- **Python 3.10+**
+- **PostgreSQL** (sebagai database utama)
+- **Redis** (berjalan pada port 6379, untuk session chat cache)
+- Akun API pihak ketiga (Groq API, LangSmith, atau HuggingFace, sesuai kebutuhan fitur).
+
+## 🚀 Cara Menjalankan Aplikasi (How to Start)
+
+Ikuti langkah-langkah di bawah ini untuk mengatur dan menjalankan backend NutriVision di lingkungan lokal Anda.
+
+### 1. Kloning Repositori & Persiapkan Virtual Environment
+
+```bash
+# Clone repo (sesuaikan dengan URL repo)
+git clone <url-repo-anda>
+cd nutrivision-backend
+
+# Buat virtual environment
+python3 -m venv venv
+
+# Aktifkan virtual environment
+# Windows:
+venv\Scripts\activate
+# Mac / Linux:
+source venv/bin/activate
+```
+
+### 2. Instalasi Dependensi
+
+Pastikan virtual environment telah aktif, lalu jalankan:
+
+```bash
+pip install -r requirements.txt
+```
+
+### 3. Konfigurasi Environment Variables
+
+Salin file template `.env.example` menjadi `.env` dan sesuaikan kredensial Anda.
+
+```bash
+cp .env.example .env
+```
+
+Buka file `.env` dan pastikan Anda mengatur beberapa variabel kunci:
+- `SECRET_KEY` & `JWT_SECRET_KEY`: Gunakan string acak yang aman.
+- `DATABASE_URL`: URI koneksi ke server PostgreSQL Anda (contoh: `postgresql+psycopg2://username:password@localhost:5432/nutrivision`).
+- `CHECKPOINT_DB_URL`: URI koneksi PostgreSQL untuk checkpointer AI/LangGraph.
+- `GROQ_API_KEY`: Kunci API LLM Anda.
+- Konfigurasi Redis, Hugging Face Token, dan konfigurasi tambahan opsional jika diperlukan.
+
+### 4. Setup & Migrasi Database
+
+Sebelum menjalankan server, inisialisasi schema database dan tabel Anda. Pastikan server PostgreSQL sudah berjalan dan database `nutrivision` telah dibuat.
+
+Jalankan migrasi menggunakan Alembic:
+
+```bash
+alembic upgrade head
+```
+
+### 5. Jalankan Server Development
+
+Setelah semua setup selesai, Anda bisa menjalankan server Flask.
+
+```bash
+python main.py
+```
+
+Server backend akan berjalan di: `http://0.0.0.0:8000`
 
 ---
-
-# 🧭 POSISI KAMU SEKARANG
-
-Kamu sudah punya:
-
-- Users ✔
-- Food system ✔
-- Serving system ✔
-- Food logs ✔
-- Chat sessions ✔ (baru ditambah)
-- Chat messages ✔
-
-👉 Artinya kamu sekarang masuk ke tahap:
-
-# 🚀 NEXT STAGE: “AI CHAT INTELLIGENCE LAYER”
-
-Bukan lagi DB / schema
-tapi **cara chat bekerja end-to-end**
-
----
-
-# 🧠 NEXT THINGS YOU HARUS BUILD (URUTAN BENAR)
-
-## 1. 🔥 Chat Service Layer (WAJIB FIRST)
-
-Buat:
-
-```
-app/services/chat_service.py
-```
-
-### Tugasnya:
-
-- handle message masuk
-- ambil session (timeout)
-- simpan message
-- panggil AI router
-- route ke food / info / edit
-- simpan response assistant
-- update last_activity_at
-
-👉 ini CORE SYSTEM kamu
-
----
-
-## 2. 🧠 AI ROUTER (INTENT ENGINE)
-
-```
-app/services/ai_router.py
-```
-
-Output harus minimal:
-
-```json
-{
-  "intent": "log_food | query | edit_food | unknown",
-  "food": "ayam goreng",
-  "amount": 2,
-  "unit": "potong"
-}
-```
-
-👉 ini otak NutriVision
-
----
-
-## 3. 🍗 FOOD RESOLUTION ENGINE (INI PENTING BANGET)
-
-```
-app/services/food_resolution_service.py
-```
-
-### tugas:
-
-ubah:
-
-- "ayam 2 potong"
-- "ayam 100 gram"
-- "nasi 1 centong"
-
-jadi:
-👉 match ke `servings`
-
----
-
-### logic penting:
-
-```
-food → foods table
-unit → servings.serving_unit
-amount → number_of_units
-```
-
----
-
-## 4. 🧠 SESSION MANAGER (TIMEOUT CORE)
-
-```
-app/services/session_service.py
-```
-
-Rules:
-
-- kalau idle > 30 menit → session baru
-- Redis optional tapi sangat disarankan
-
----
-
-## 5. 📡 CHAT ROUTES (FLASK ENTRY POINT)
-
-```
-app/routes/chat_routes.py
-```
-
-Endpoint minimal:
-
-### POST /chat
-
-```json
-{
-  "user_id": "...",
-  "message": "ayam 2 potong",
-  "session_id": null
-}
-```
-
-Response:
-
-```json
-{
-  "session_id": "...",
-  "reply": "Oke, ayam goreng 2 potong sudah dicatat",
-  "intent": "log_food"
-}
-```
-
----
-
-### GET /chat/sessions
-
-list session user
-
----
-
-### GET /chat/sessions/<id>/messages
-
-chat history (pagination)
-
----
-
-## 6. 🧾 CHAT REPOSITORY
-
-```
-app/repositories/chat_repository.py
-```
-
-functions:
-
-- create_session
-- get_session
-- save_message
-- get_messages
-- update_last_activity
-
----
-
-## 7. ⚡ REDIS (OPTIONAL TAPI SANGAT DISARANKAN)
-
-```
-session:{user_id} → session_id
-```
-
-TTL:
-
-```
-30 menit idle
-```
-
----
-
-# 🧠 STRUKTUR FLOW FINAL
-
-```text id="flow1"
-User message
-   ↓
-Flask /chat
-   ↓
-Session Service (timeout check)
-   ↓
-Chat Message saved
-   ↓
-AI Router (intent detection)
-   ↓
-IF log_food:
-      → Food Resolution Service
-      → Food Log DB
-IF query:
-      → LLM answer
-IF edit:
-      → update food log
-   ↓
-Save assistant message
-   ↓
-Return response
-```
-
----
-
-# 🔥 YANG PALING PENTING (DESIGN DECISION)
-
-## 1. ChatSession itu bukan "chat room"
-
-👉 tapi **container memory**
-
----
-
-## 2. ChatMessage itu source of truth
-
-👉 semua interaksi disimpan
-
----
-
-## 3. AI tidak simpan data
-
-👉 AI cuma classifier + extractor
-
----
-
-## 4. Serving system kamu itu kunci utama
-
-👉 ini yang bikin:
-
-- “ayam 2 potong”
-- “ayam 100 gram”
-
-jadi bisa akurat
-
----
-
-# 🚀 NEXT STEP (SETELAH INI)
-
-Kalau kamu lanjut, urutan terbaik:
-
-## Phase 1 (core chat)
-
-- ChatService
-- SessionService
-- AI Router
-- Chat Routes
-
-## Phase 2 (food intelligence)
-
-- FoodResolutionService
-- fuzzy search food (TSVECTOR already good)
-
-## Phase 3 (UX)
-
-- pagination chat
-- session list UI
-- auto title session (AI generate)
-
-## Phase 4 (upgrade AI)
-
-- memory summarization
-- context compression
-- hybrid retrieval (last messages + food logs)
-
----
-
-# 💡 JAWABAN SINGKAT: “LANJUTAN KAMU APA?”
-
-👉 Kamu sekarang HARUS mulai dari:
-
-### ✔ `chat_service.py`
-
-karena itu pusat sistem
-
----
-
-Kalau kamu mau, aku bisa bantu step berikutnya:
-
-### 🔥 “FULL IMPLEMENTATION ChatService + AI Router + Session Redis ready production”
-
-atau
-
-### 🔥 “Food resolution system (ayam 2 potong vs gram conversion)”
-
-tinggal bilang 👍
+*Dibuat untuk backend system aplikasi NutriVision*
